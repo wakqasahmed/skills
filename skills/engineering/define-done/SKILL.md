@@ -25,6 +25,6 @@ Use this before changing code or docs on non-trivial work.
 
 - Acceptance criteria satisfied.
 - Relevant checks run and named.
-- Tests added or updated, or a reason is recorded.
+- Tests added/updated, or a reason is recorded.
 - Independent review completed for non-trivial work.
-- Rollout or rollback notes present when risk warrants them.
+- Rollout/rollback notes present when risk warrants them.
