@@ -10,7 +10,7 @@ Use handoff only when continuity is needed.
 ## Include
 
 - Current objective
-- Current branch, worktree, PR, and issue
+- Current branch/worktree/PR/issue
 - Completed changes
 - Verification already run
 - Failing or blocked commands

@@ -23,7 +23,7 @@ Each issue should include:
 - Acceptance criteria
 - Verification plan
 - Expected test layers
-- Constraints and non-goals
+- Constraints / non-goals
 - Links and relevant files
 - Risk level
 

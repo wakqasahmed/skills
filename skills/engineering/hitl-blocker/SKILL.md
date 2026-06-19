@@ -10,7 +10,7 @@ Use this before reporting a blocker back to the user.
 ## Workflow
 
 1. Identify the exact missing human-held item.
-2. Create or reuse labels: `HITL task` and `high priority` when launch or work is blocked.
+2. Create or reuse labels: `HITL task` and `high priority` when launch/work is blocked.
 3. Create a GitHub issue in the most relevant repo.
 4. Include where to set or obtain the value.
 5. Include why it blocks the work.
@@ -20,9 +20,9 @@ Use this before reporting a blocker back to the user.
 ## Issue Must Include
 
 - Missing item
-- Owner or action needed
+- Owner/action needed
 - Where to enter it
-- Why it blocks launch or work
+- Why it blocks launch/work
 - Verification after completion
 
 ## Guardrails

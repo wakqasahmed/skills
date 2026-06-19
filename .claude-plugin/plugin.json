@@ -19,13 +19,12 @@
     "./skills/agentic-commerce/custom-agent-remediation-plan",
     "./skills/agentic-commerce/fde-opportunity-map",
     "./skills/agentic-commerce/skills-marketplace-readiness",
-    "./skills/engineering-workflow/clarify-work",
-    "./skills/engineering-workflow/define-done",
-    "./skills/engineering-workflow/decompose-to-issues",
-    "./skills/engineering-workflow/review-gate",
-    "./skills/engineering-workflow/release-gate",
-    "./skills/engineering-workflow/workflow-handoff",
-    "./skills/engineering-workflow/hitl-blocker",
-    "./skills/engineering-workflow/setup-matt-pocock-skills"
+    "./skills/engineering/clarify-work",
+    "./skills/engineering/decompose-to-issues",
+    "./skills/engineering/define-done",
+    "./skills/engineering/review-gate",
+    "./skills/engineering/hitl-blocker",
+    "./skills/engineering/release-gate",
+    "./skills/productivity/handoff"
   ]
 }

@@ -16,7 +16,7 @@ Use this before staging or production release.
 5. Record rollback path.
 6. Create a HITL issue if deployment needs missing human-held access.
 
-## Required For Medium Or High Risk
+## Required For Medium/High Risk
 
 - CI status
 - Review status

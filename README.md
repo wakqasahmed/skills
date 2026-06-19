@@ -16,11 +16,15 @@ Audit my site for ChatGPT, Claude, Perplexity, Google AI Overviews, llms.txt, sc
 
 ## Install Everything
 
+Use the aggregate pack when you want all included skills from one install path:
+
 ```bash
 npx skills@latest add wakqasahmed/skills
 ```
 
 ## Install Individual Packs
+
+Use these only when you want one source pack instead of the aggregate bundle:
 
 ```bash
 npx skills@latest add wakqasahmed/ai-visibility-skills
@@ -32,7 +36,7 @@ npx skills@latest add wakqasahmed/ai-engineering-workflow-skills
 
 - `ai-visibility-skills`: AI search visibility, `llms.txt`, crawler access, schema, sitemap, answer-engine content, and citation readiness.
 - `agentic-commerce-skills`: ecommerce audits, crawler access, protocol readiness, policy readiness, and remediation planning.
-- `ai-engineering-workflow-skills`: clarify work, define done, decompose scope, review gates, release gates, handoffs, and HITL blockers.
+- `ai-engineering-workflow-skills`: clarify work, define done, decompose scope, review gates, release gates, handoffs, and HITL blockers. The aggregate mirrors the current source manifest.
 
 ## Repo Layout
 
@@ -40,7 +44,8 @@ npx skills@latest add wakqasahmed/ai-engineering-workflow-skills
 skills/
   ai-visibility/
   agentic-commerce/
-  engineering-workflow/
+  engineering/
+  productivity/
 ```
 
 The source repos remain canonical. This repo is the all-skills distribution surface.
@@ -48,14 +53,10 @@ The source repos remain canonical. This repo is the all-skills distribution surf
 ## Sync From Source
 
 ```bash
-scripts/sync-from-source.sh
+scripts/sync-from-source.sh ../ai-visibility-skills ../agentic-commerce-skills ../ai-engineering-workflow-skills
 ```
 
-That refreshes the copied skill folders from:
-
-- `/opt/OSS-contributions/ai-visibility-skills`
-- `/opt/OSS-contributions/agentic-commerce-skills`
-- `/opt/OSS-contributions/ai-engineering-workflow-skills`
+That refreshes the copied skill folders from local clones of the three source packs. You can also pass those paths with `VISIBILITY_SOURCE`, `COMMERCE_SOURCE`, and `WORKFLOW_SOURCE`.
 
 ## Validate
 
