@@ -1,0 +1,31 @@
+{
+  "name": "skills",
+  "skills": [
+    "./skills/ai-visibility/ai-visibility-audit",
+    "./skills/ai-visibility/llms-txt-generator",
+    "./skills/ai-visibility/robots-ai-crawler-audit",
+    "./skills/ai-visibility/schema-markup-audit",
+    "./skills/ai-visibility/sitemap-discovery-audit",
+    "./skills/ai-visibility/answer-engine-content-audit",
+    "./skills/ai-visibility/citation-readiness-audit",
+    "./skills/ai-visibility/ai-search-remediation-plan",
+    "./skills/agentic-commerce/readiness-audit",
+    "./skills/agentic-commerce/seo-aeo-geo-audit",
+    "./skills/agentic-commerce/agent-readiness",
+    "./skills/agentic-commerce/commerce-protocol-readiness",
+    "./skills/agentic-commerce/product-knowledge-gap-analysis",
+    "./skills/agentic-commerce/llms-txt-and-crawler-access",
+    "./skills/agentic-commerce/ecommerce-policy-readiness",
+    "./skills/agentic-commerce/custom-agent-remediation-plan",
+    "./skills/agentic-commerce/fde-opportunity-map",
+    "./skills/agentic-commerce/skills-marketplace-readiness",
+    "./skills/engineering-workflow/clarify-work",
+    "./skills/engineering-workflow/define-done",
+    "./skills/engineering-workflow/decompose-to-issues",
+    "./skills/engineering-workflow/review-gate",
+    "./skills/engineering-workflow/release-gate",
+    "./skills/engineering-workflow/workflow-handoff",
+    "./skills/engineering-workflow/hitl-blocker",
+    "./skills/engineering-workflow/setup-matt-pocock-skills"
+  ]
+}
