@@ -36,7 +36,7 @@ npx skills@latest add wakqasahmed/ai-engineering-workflow-skills
 
 - `ai-visibility-skills`: AI search visibility, `llms.txt`, crawler access, schema, sitemap, answer-engine content, and citation readiness.
 - `agentic-commerce-skills`: ecommerce audits, crawler access, protocol readiness, policy readiness, and remediation planning.
-- `ai-engineering-workflow-skills`: clarify work, define done, decompose scope, review gates, release gates, handoffs, and HITL blockers. The aggregate mirrors the current source manifest.
+- `ai-engineering-workflow-skills`: clarify work, define done, decompose scope, subagent pipeline, review gates, release gates, idea roasting, handovers, and HITL blockers. The aggregate mirrors the current source manifest.
 
 ## Repo Layout
 
@@ -45,6 +45,7 @@ skills/
   ai-visibility/
   agentic-commerce/
   engineering/
+  product/
   productivity/
 ```
 

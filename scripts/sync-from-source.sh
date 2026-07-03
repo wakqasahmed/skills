@@ -17,10 +17,11 @@ USAGE
   exit 2
 fi
 
-rm -rf "$ROOT/skills/ai-visibility" "$ROOT/skills/agentic-commerce" "$ROOT/skills/engineering" "$ROOT/skills/productivity"
+rm -rf "$ROOT/skills/ai-visibility" "$ROOT/skills/agentic-commerce" "$ROOT/skills/engineering" "$ROOT/skills/productivity" "$ROOT/skills/product"
 cp -R "$VISIBILITY_SOURCE/skills/ai-visibility" "$ROOT/skills/"
 cp -R "$COMMERCE_SOURCE/skills/agentic-commerce" "$ROOT/skills/"
 cp -R "$WORKFLOW_SOURCE/skills/engineering" "$ROOT/skills/"
 cp -R "$WORKFLOW_SOURCE/skills/productivity" "$ROOT/skills/"
+cp -R "$WORKFLOW_SOURCE/skills/product" "$ROOT/skills/"
 
 python3 "$ROOT/scripts/validate-plugin.py"
