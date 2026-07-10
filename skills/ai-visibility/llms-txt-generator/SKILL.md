@@ -7,6 +7,8 @@ description: Draft or review an `llms.txt` file from a site's public pages, docs
 
 Create a concise `llms.txt` draft that points AI agents to the most useful public resources.
 
+Scope: drafting and reviewing the file itself. Whether crawlers can reach it belongs to `robots-ai-crawler-audit`; choosing which pages deserve to exist belongs to `answer-engine-content-audit`.
+
 ## Workflow
 
 1. Inspect the homepage, sitemap, docs, product/service pages, policy pages, and support pages.

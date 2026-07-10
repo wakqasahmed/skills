@@ -17,6 +17,19 @@ Assess a public website for AI-mediated discovery, parsing, citation, and recomm
 6. Rank blockers by impact: critical, important, optional.
 7. Produce a prioritized remediation plan.
 
+Run the discoverability and machine-readable checks with the commands in `references/checks.md` and cite command output as evidence.
+
+## Delegation
+
+This is the orchestrator: it finds and ranks blockers, then hands deep dives to the focused skills instead of redoing them inline:
+
+- Robots/meta-robots/header rules → `robots-ai-crawler-audit`
+- Sitemap coverage, canonicals, redirects → `sitemap-discovery-audit`
+- Structured data depth → `schema-markup-audit`
+- Drafting `llms.txt` → `llms-txt-generator`
+- Content gaps → `answer-engine-content-audit`; citation trust → `citation-readiness-audit`
+- Turning findings into tickets → `ai-search-remediation-plan`
+
 ## Output
 
 - Overall score: ready, partially ready, or blocked
