@@ -7,6 +7,8 @@ description: Audit sitemap coverage, canonical URLs, indexable pages, redirects,
 
 Check whether crawlers can discover the site's important public URLs.
 
+Scope: discovery paths only. Access rules (robots, headers, bot blocks) belong to `robots-ai-crawler-audit`; whole-site triage belongs to `ai-visibility-audit`.
+
 ## Workflow
 
 1. Find sitemap declarations in robots.txt and common sitemap paths.

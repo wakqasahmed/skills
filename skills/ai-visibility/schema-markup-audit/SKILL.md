@@ -16,6 +16,8 @@ Review structured data for clarity, completeness, and consistency with visible p
 5. Check entity clarity: organization, product/service, author, offer, review, FAQ, breadcrumb, and contact details.
 6. Prioritize fixes that improve disambiguation and answer confidence.
 
+Use the extraction commands and per-type property checklists in `references/checks.md`.
+
 ## Output
 
 - Existing schema types found

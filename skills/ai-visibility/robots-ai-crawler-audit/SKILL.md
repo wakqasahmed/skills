@@ -7,6 +7,8 @@ description: Review robots.txt, meta robots, headers, and AI crawler rules for s
 
 Check whether crawler access rules help or block AI visibility.
 
+Scope: access rules only. Sitemap coverage belongs to `sitemap-discovery-audit`; drafting `llms.txt` belongs to `llms-txt-generator`; whole-site triage belongs to `ai-visibility-audit`.
+
 ## Workflow
 
 1. Fetch `/robots.txt`.

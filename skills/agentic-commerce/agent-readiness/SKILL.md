@@ -13,6 +13,14 @@ description: Check whether AI agents can discover, read, cite, and safely act on
 4. Check whether support and checkout actions are clearly bounded.
 5. Identify missing agent-facing affordances such as sitemap, `llms.txt`, markdown-friendly content, or API/protocol paths.
 
+Run the checks with the commands in `references/checks.md` and cite command output as evidence for each finding.
+
+## Delegation
+
+- Access-file depth (robots, sitemap, llms.txt) → `llms-txt-and-crawler-access`.
+- Structured-data depth → `schema-markup-audit` from the ai-visibility pack.
+- Scoring and routing the whole store → `readiness-audit`; this skill feeds its agent-access dimension.
+
 ## Guardrails
 
 - Separate read readiness from action readiness.
