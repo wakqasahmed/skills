@@ -8,11 +8,16 @@ That said, several skills instruct the agent to *run shell commands* on your beh
 
 ### Skills in this repo that instruct running shell commands or fetching URLs
 
+This list covers the skills whose workflow explicitly runs `curl`/shell commands or names fetching a URL as a step. It is representative, not a guaranteed-exhaustive audit — many other skills describe "checking" or "reviewing" a site's pages, which an agent may also carry out via a URL fetch depending on the tools it has available.
+
 - `skills/agentic-commerce/agent-readiness/references/checks.md` — runs `curl` against the site under audit (robots.txt, headers, bot user-agents).
 - `skills/ai-visibility/ai-visibility-audit/references/checks.md` — runs `curl` against the site under audit (robots.txt, redirects, meta tags, structured data).
 - `skills/ai-visibility/schema-markup-audit/references/checks.md` — runs `curl` to fetch page HTML for schema/structured-data checks.
+- `skills/ai-visibility/robots-ai-crawler-audit/SKILL.md` — step 1 fetches `/robots.txt`, then checks headers and tags on key URLs.
+- `skills/ai-visibility/sitemap-discovery-audit/SKILL.md` — finds sitemap declarations and checks representative URLs for status codes, redirects, and canonical tags.
+- `skills/agentic-commerce/llms-txt-and-crawler-access/SKILL.md` — checks `robots.txt`, sitemap availability, and `llms.txt` existence.
 
-All three fetch only the target site the user is auditing (via a `$SITE`/`$URL`/`$PDP` variable supplied by the user or agent) — they do not fetch arbitrary third-party endpoints or exfiltrate data.
+All of the above fetch only the target site the user is auditing (via a `$SITE`/`$URL`/`$PDP` variable, or the site named in the conversation) — they do not fetch arbitrary third-party endpoints or exfiltrate data.
 
 ## Reporting a security concern
 
