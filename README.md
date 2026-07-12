@@ -64,3 +64,7 @@ That refreshes the copied skill folders from local clones of the three source pa
 ```bash
 python3 scripts/validate-plugin.py
 ```
+
+## Security
+
+Skills are Markdown instruction files, not executable code. See [SECURITY.md](SECURITY.md) for what that means, which skills instruct running shell commands or fetching URLs, and how to report a concern.
