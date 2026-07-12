@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+  Frozen fixture: skills/agentic-commerce/readiness-audit/eval/fixtures/verified-audit.html
+  Represents: a storefront with mixed signals that should route to
+  "Verified Audit" (total score 7-11, no dimension at 0).
+  Modeled on the worked example in ../../references/example-audit.md.
+  Frozen: do not edit in place; add a new fixture instead if scenarios change.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cotton Crew Socks - Example Apparel Co</title>
+  <link rel="canonical" href="https://example-apparel-fixture.test/products/cotton-crew-socks">
+  <meta name="description" content="Cotton crew socks, 3-pack. Machine washable.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Cotton Crew Socks (3-pack)",
+    "offers": {
+      "@type": "Offer",
+      "price": "18.00",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    }
+  }
+  </script>
+</head>
+<body>
+  <h1>Cotton Crew Socks (3-pack)</h1>
+  <p>$18.00 - In stock</p>
+  <p>Sizes and colors are selectable above; variant-level price and stock are rendered client-side only and are not present in the structured data.</p>
+
+  <section id="shipping">
+    <h2>Shipping</h2>
+    <p>We ship within 3-5 business days.</p>
+  </section>
+  <section id="returns">
+    <h2>Returns</h2>
+    <p>Returns accepted within 30 days.</p>
+  </section>
+
+  <section id="checkout">
+    <h2>Add to cart</h2>
+    <p>Select a size and color above, then add to cart and check out with card or PayPal. Standard human checkout only; no cart permalink or programmatic path.</p>
+  </section>
+
+  <footer>
+    <a href="/contact">Contact us</a>
+    <a href="/sitemap.xml">Sitemap</a>
+  </footer>
+</body>
+</html>

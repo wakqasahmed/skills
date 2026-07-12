@@ -1,0 +1,6 @@
+{
+  "fixture": "verified-audit.html",
+  "url": "https://example-apparel-fixture.test/products/cotton-crew-socks",
+  "expected_routing": "Verified Audit",
+  "notes": "Indexable with partial structured data and thin policy content, no dimension at 0, total should land in the 7-11 band."
+}

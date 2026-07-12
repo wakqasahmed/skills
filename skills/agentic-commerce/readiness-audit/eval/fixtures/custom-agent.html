@@ -1,0 +1,76 @@
+<!doctype html>
+<!--
+  Frozen fixture: skills/agentic-commerce/readiness-audit/eval/fixtures/custom-agent.html
+  Represents: a storefront strong across every dimension that should route to
+  "Custom Agent" (total >= 12, agent access >= 2, policy/support >= 2).
+  Frozen: do not edit in place; add a new fixture instead if scenarios change.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Trail Runner Jacket - Example Outdoor Co</title>
+  <link rel="canonical" href="https://example-outdoor-fixture.test/products/trail-runner-jacket">
+  <meta name="description" content="Waterproof trail running jacket, packable. Available in Black and Blue, size Medium, in stock.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Trail Runner Jacket",
+    "description": "Waterproof, packable trail running jacket.",
+    "offers": [
+      {
+        "@type": "Offer",
+        "sku": "TRJ-BLK-M",
+        "name": "Black, Medium",
+        "price": "129.00",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      {
+        "@type": "Offer",
+        "sku": "TRJ-BLU-M",
+        "name": "Blue, Medium",
+        "price": "129.00",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/OutOfStock"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <h1>Trail Runner Jacket</h1>
+  <p>$129.00 - Black (Medium) in stock, Blue (Medium) out of stock. Both offers, with price and availability, are in the structured data above.</p>
+
+  <nav>
+    <a href="/sitemap.xml">Sitemap</a>
+    <a href="/llms.txt">llms.txt</a>
+  </nav>
+
+  <section id="faq">
+    <h2>Frequently asked questions</h2>
+    <h3>What is the return window?</h3>
+    <p>30 days from delivery, unworn, original tags attached. Refund issued to original payment method within 5 business days of receipt.</p>
+    <h3>Does this jacket run true to size?</h3>
+    <p>Runs true to size for layering over a t-shirt; size up for heavier base layers. See the size chart at /size-guide.</p>
+    <h3>Is international shipping available?</h3>
+    <p>Yes, to 24 countries, 7-14 business days, duties calculated at checkout.</p>
+  </section>
+
+  <section id="policies">
+    <h2>Shipping and returns policy</h2>
+    <p>Domestic orders ship within 1-2 business days via ground; expedited options shown at checkout with guaranteed delivery dates. Returns are free for domestic orders using the prepaid label generated at /returns/start; international returns are buyer-paid.</p>
+    <p>Support: support@example-outdoor-fixture.test, live chat 9am-6pm ET, target first response time 4 business hours.</p>
+  </section>
+
+  <section id="checkout">
+    <h2>Checkout</h2>
+    <p>Standard cart and checkout at /cart. A live cart and order-status API is available now at /api/v1/cart, documented at /developers, for agent-driven ordering by integration partners.</p>
+  </section>
+
+  <footer>
+    <a href="/robots.txt">robots.txt</a>
+    <a href="/llms.txt">llms.txt</a>
+  </footer>
+</body>
+</html>

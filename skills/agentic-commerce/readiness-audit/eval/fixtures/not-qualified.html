@@ -1,0 +1,31 @@
+<!doctype html>
+<!--
+  Frozen fixture: skills/agentic-commerce/readiness-audit/eval/fixtures/not-qualified.html
+  Represents: a storefront that should route to "Not Qualified" (a blocking gap
+  drives at least one dimension to 0 -- here, SEO basics, because the page is
+  not indexable and AI bots are blocked in robots.txt).
+  Frozen: do not edit in place; add a new fixture instead if scenarios change.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Home</title>
+  <meta name="robots" content="noindex, nofollow">
+  <!--
+    robots.txt for this fixture (served separately in a real audit, inlined
+    here as a comment since this is a static snapshot):
+    User-agent: GPTBot
+    Disallow: /
+    User-agent: ClaudeBot
+    Disallow: /
+    User-agent: PerplexityBot
+    Disallow: /
+    User-agent: *
+    Disallow: /
+  -->
+</head>
+<body>
+  <div id="app"><!-- client-side-only shell, no server-rendered content --></div>
+  <script src="/static/bundle.js"></script>
+</body>
+</html>
