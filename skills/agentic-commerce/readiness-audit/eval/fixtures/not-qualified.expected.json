@@ -1,0 +1,6 @@
+{
+  "fixture": "not-qualified.html",
+  "url": "https://example-notqualified-fixture.test/",
+  "expected_routing": "Not Qualified",
+  "notes": "robots noindex + AI bot blocks + client-side-only shell should drive SEO basics and agent access to 0, forcing Not Qualified regardless of total."
+}

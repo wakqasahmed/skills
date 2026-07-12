@@ -1,0 +1,6 @@
+{
+  "fixture": "custom-agent.html",
+  "url": "https://example-outdoor-fixture.test/products/trail-runner-jacket",
+  "expected_routing": "Custom Agent",
+  "notes": "Full structured variant data, llms.txt affordance, detailed FAQ and policy content, and a documented API path should push agent access and policy/support to >=2 with total >=12."
+}
