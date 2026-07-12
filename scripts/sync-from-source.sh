@@ -24,4 +24,5 @@ cp -R "$WORKFLOW_SOURCE/skills/engineering" "$ROOT/skills/"
 cp -R "$WORKFLOW_SOURCE/skills/productivity" "$ROOT/skills/"
 cp -R "$WORKFLOW_SOURCE/skills/product" "$ROOT/skills/"
 
+python3 "$ROOT/scripts/sync-plugin-manifest.py"
 python3 "$ROOT/scripts/validate-plugin.py"
