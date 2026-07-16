@@ -7,6 +7,8 @@ on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+  repository_dispatch:
+    types: [source-updated]
 
 permissions:
   contents: write
@@ -23,9 +25,11 @@ jobs:
           git clone --depth 1 https://github.com/wakqasahmed/ai-visibility-skills /tmp/ai-visibility-skills
           git clone --depth 1 https://github.com/wakqasahmed/agentic-commerce-skills /tmp/agentic-commerce-skills
           git clone --depth 1 https://github.com/wakqasahmed/ai-engineering-workflow-skills /tmp/ai-engineering-workflow-skills
+          git clone --depth 1 https://github.com/wakqasahmed/php-laravel-filament-skills /tmp/php-laravel-filament-skills
+          git clone --depth 1 https://github.com/wakqasahmed/email-marketing-skills /tmp/email-marketing-skills
 
       - name: Sync from source
-        run: scripts/sync-from-source.sh /tmp/ai-visibility-skills /tmp/agentic-commerce-skills /tmp/ai-engineering-workflow-skills
+        run: scripts/sync-from-source.sh /tmp/ai-visibility-skills /tmp/agentic-commerce-skills /tmp/ai-engineering-workflow-skills /tmp/php-laravel-filament-skills /tmp/email-marketing-skills
 
       - name: Fail on drift
         id: drift
@@ -42,7 +46,7 @@ jobs:
           fi
 
       - name: Open sync PR on scheduled drift
-        if: steps.drift.outputs.drifted == 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        if: steps.drift.outputs.drifted == 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
