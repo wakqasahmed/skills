@@ -73,6 +73,16 @@ That refreshes the copied skill folders from local clones of the five source pac
 python3 scripts/validate-plugin.py
 ```
 
+## Automation
+
+This repo is never hand-edited — its `skills/` content is a mechanical copy of the five source packs, and it stays current on its own:
+
+1. Each source repo pushes to `main` → fires a `repository_dispatch` event to this repo (`.github/workflows/notify-aggregate.yml` in each source repo).
+2. This repo's `sync-check.yml` re-runs `scripts/sync-from-source.sh` (which includes `validate-plugin.py`), and if the sync introduces drift, opens a PR.
+3. That PR **auto-merges once checks pass** — a deliberate, narrow exception to manual-review-required policy, scoped to this repo's mechanical sync PRs only, since the content was already reviewed in its source repo's own PR flow. See the comment above the merge step in `sync-check.yml` for the full rationale.
+
+A nightly cron (05:17 UTC) and `workflow_dispatch` also trigger the same drift check as a fallback, independent of the dispatch events.
+
 ## Security
 
 Skills are Markdown instruction files, not executable code. See [SECURITY.md](SECURITY.md) for what that means, which skills instruct running shell commands or fetching URLs, and how to report a concern.
