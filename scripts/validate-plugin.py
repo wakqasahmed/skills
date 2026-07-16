@@ -27,6 +27,8 @@ required_readme_text = [
     "npx skills@latest add wakqasahmed/ai-visibility-skills",
     "npx skills@latest add wakqasahmed/agentic-commerce-skills",
     "npx skills@latest add wakqasahmed/ai-engineering-workflow-skills",
+    "npx skills@latest add wakqasahmed/php-laravel-filament-skills",
+    "npx skills@latest add wakqasahmed/email-marketing-skills",
 ]
 missing_readme_text = [text for text in required_readme_text if text not in readme]
 if missing_readme_text:
