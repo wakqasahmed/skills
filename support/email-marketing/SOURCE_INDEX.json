@@ -1,0 +1,488 @@
+{
+  "GMAIL-01": {
+    "publisher": "Google Gmail Help",
+    "title": "Email sender guidelines",
+    "url": "https://support.google.com/mail/answer/81126?hl=en",
+    "supports": "Authentication, TLS/PTR expectations, spam-rate guidance, subscription/unsubscribe requirements, and sender practices."
+  },
+  "GMAIL-02": {
+    "publisher": "Google Gmail Help",
+    "title": "Email sender guidelines FAQ",
+    "url": "https://support.google.com/mail/answer/14229414?hl=en",
+    "supports": "Daily spam-rate calculation; target below 0.1% and avoid 0.3% or higher."
+  },
+  "GMAIL-03": {
+    "publisher": "Google",
+    "title": "Postmaster Tools",
+    "url": "https://gmail.com/postmaster/",
+    "supports": "Monitor Gmail delivery errors, spam reports, reputation, and related diagnostics."
+  },
+  "YAHOO-01": {
+    "publisher": "Yahoo Sender Hub",
+    "title": "Sender Best Practices",
+    "url": "https://senders.yahooinc.com/best-practices/",
+    "supports": "SPF, DKIM, DMARC alignment, easy unsubscribe, complaint control, and list practices."
+  },
+  "CRTC-CASL-01": {
+    "publisher": "Canadian Radio-television and Telecommunications Commission",
+    "title": "Frequently Asked Questions about Canada's Anti-Spam Legislation",
+    "url": "https://www.crtc.gc.ca/eng/com500/faq500.htm",
+    "supports": "CASL CEMs require consent, identification information, and an unsubscribe mechanism; CEMs sent using a computer system in Canada generally remain subject to CASL when sent abroad, subject to limited exemptions."
+  },
+  "CRTC-CASL-02": {
+    "publisher": "Canadian Radio-television and Telecommunications Commission",
+    "title": "CASL Guidance on Implied Consent",
+    "url": "https://crtc.gc.ca/eng/com500/guide.htm",
+    "supports": "CASL distinguishes express and implied consent; senders must be able to substantiate the consent they rely on."
+  },
+  "EU-EC-01": {
+    "publisher": "European Commission",
+    "title": "Legal grounds for processing data",
+    "url": "https://commission.europa.eu/law/law-topic/data-protection/rules-business-and-organisations/legal-grounds-processing-data_en",
+    "supports": "GDPR processing requires an applicable legal ground; direct-marketing processing must be assessed under EU data-protection law."
+  },
+  "EU-EC-02": {
+    "publisher": "European Commission",
+    "title": "When can personal data be processed?",
+    "url": "https://commission.europa.eu/law/law-topic/data-protection/rules-business-and-organisations/legal-grounds-processing-data/grounds-processing/when-can-personal-data-be-processed_en",
+    "supports": "Legitimate-interest processing requires a case-specific assessment that the person's rights and freedoms do not override the interest."
+  },
+  "FTC-01": {
+    "publisher": "U.S. Federal Trade Commission",
+    "title": "CAN-SPAM Act: A Compliance Guide for Business",
+    "url": "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business",
+    "supports": "Accurate headers, non-deceptive subjects, ad identification where required, postal address, and opt-out duties."
+  },
+  "ICO-01": {
+    "publisher": "UK Information Commissioner’s Office",
+    "title": "Electronic mail marketing",
+    "url": "https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guide-to-pecr/electronic-and-telephone-marketing/electronic-mail-marketing/",
+    "supports": "Consent rules, soft opt-in, company-email treatment, and suppression expectations under PECR."
+  },
+  "ICO-02": {
+    "publisher": "UK Information Commissioner’s Office",
+    "title": "How do we comply with the PECR electronic mail marketing rules?",
+    "url": "https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guidance-on-direct-marketing-using-electronic-mail/how-do-we-comply-with-the-pecr-electronic-mail-marketing-rules/",
+    "supports": "Consent must be specific and informed for the channel and marketing purpose."
+  },
+  "ICO-03": {
+    "publisher": "UK Information Commissioner’s Office",
+    "title": "Business-to-business marketing",
+    "url": "https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/business-to-business-marketing/",
+    "supports": "B2B consent and lawful-basis nuances; corporate vs individual subscriber distinctions."
+  },
+  "ICO-04": {
+    "publisher": "UK Information Commissioner’s Office",
+    "title": "Using marketing lists",
+    "url": "https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guide-to-pecr/electronic-and-telephone-marketing/using-marketing-lists/",
+    "supports": "Be transparent about marketing use and collect clear, channel-specific opt-in."
+  },
+  "ICO-CONSENT-01": {
+    "publisher": "UK Information Commissioner’s Office",
+    "title": "How should we obtain, record and manage consent?",
+    "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/lawful-basis/consent/how-should-we-obtain-record-and-manage-consent/",
+    "supports": "Keep a specific audit trail of who consented, when, what they were told, how they consented, and later withdrawal; retain the matching statement or form version."
+  },
+  "HUB-CONSENT-01": {
+    "publisher": "HubSpot Knowledge Base",
+    "title": "Understand opt-in consent for email",
+    "url": "https://knowledge.hubspot.com/marketing-email/understand-opt-in-consent-for-email",
+    "supports": "Explicit vs implied consent and practical opt-in mechanisms."
+  },
+  "MC-PERM-01": {
+    "publisher": "Mailchimp",
+    "title": "Email Marketing Best Practices for Success",
+    "url": "https://mailchimp.com/resources/common-rookie-mistakes-email-marketers/",
+    "supports": "Permission-based marketing, double opt-in, and distinction from transactional mail."
+  },
+  "MC-LISTS-01": {
+    "publisher": "Mailchimp Help Center",
+    "title": "Requirements and Best Practices for Audiences",
+    "url": "https://mailchimp.com/help/requirements-best-practices-audiences/",
+    "supports": "Prohibits purchased, rented, third-party, publicly available, scraped, and otherwise non-permission-based lists."
+  },
+  "MC-SPAM-01": {
+    "publisher": "Mailchimp",
+    "title": "How Legitimate Marketers Can Prevent Spam Complaints",
+    "url": "https://mailchimp.com/help/how-legitimate-marketers-can-prevent-spam-complaints/",
+    "supports": "Make unsubscribe prominent and reduce reasons recipients report spam."
+  },
+  "MC-SEG-01": {
+    "publisher": "Mailchimp",
+    "title": "About Open and Click Rates",
+    "url": "https://mailchimp.com/help/about-open-and-click-rates/",
+    "supports": "Segment by location, interests, or behavior to make content relevant."
+  },
+  "MC-AB-01": {
+    "publisher": "Mailchimp",
+    "title": "Create an A/B Test",
+    "url": "https://mailchimp.com/help/create-ab-tests/",
+    "supports": "Test one variable such as subject, sender, content, or send time, with controlled variations."
+  },
+  "MC-TIME-01": {
+    "publisher": "Mailchimp",
+    "title": "Use Send Time Optimization",
+    "url": "https://mailchimp.com/help/use-send-time-optimization/",
+    "supports": "Use recipient engagement data to choose send time instead of assuming a universal best hour."
+  },
+  "MC-SUBJ-01": {
+    "publisher": "Mailchimp",
+    "title": "Best Practices for Email Subject Lines",
+    "url": "https://mailchimp.com/help/best-practices-for-email-subject-lines/",
+    "supports": "Descriptive, short subject lines; careful emoji use; subject-line testing."
+  },
+  "MC-REPORT-01": {
+    "publisher": "Mailchimp",
+    "title": "Getting Started with Reports",
+    "url": "https://mailchimp.com/help/getting-started-reports/",
+    "supports": "Delivery, opens, clicks, recipients, and report drill-down."
+  },
+  "MC-CONV-01": {
+    "publisher": "Mailchimp",
+    "title": "About the Conversion Insights Dashboard",
+    "url": "https://mailchimp.com/help/about-conversion-insights-dashboard/",
+    "supports": "Revenue attribution, funnel performance, store visits, and sales."
+  },
+  "MC-GA-01": {
+    "publisher": "Mailchimp",
+    "title": "Integrate Google Analytics with Mailchimp",
+    "url": "https://mailchimp.com/help/integrate-google-analytics-with-mailchimp/",
+    "supports": "UTM/link tracking and post-click conversion measurement."
+  },
+  "MC-GDPR-01": {
+    "publisher": "Mailchimp Help Center",
+    "title": "Collect Consent with GDPR Forms",
+    "url": "https://mailchimp.com/help/collect-consent-with-gdpr-forms/",
+    "supports": "Explain why data is collected, offer separate affirmative choices for marketing activities, identify the collector, and retain the form version shown at signup."
+  },
+  "MC-DOI-01": {
+    "publisher": "Mailchimp Help Center",
+    "title": "About Double Opt-in",
+    "url": "https://mailchimp.com/help/about-double-opt-in/",
+    "supports": "Double opt-in adds a confirmation step; only after verification is a contact added as subscribed, and the method should be selected for the company’s needs or requirements."
+  },
+  "MC-PROFILE-01": {
+    "publisher": "Mailchimp Help Center",
+    "title": "About Contact Profile Pages",
+    "url": "https://mailchimp.com/help/about-contact-profile-pages/",
+    "supports": "Contact profiles expose signup origin, marketing state, opted-in date, permission timestamp, signup method, and the text version of a GDPR-enabled signup form."
+  },
+  "LIT-ACCESS-01": {
+    "publisher": "Litmus",
+    "title": "The Ultimate Guide to Email Accessibility in 2026",
+    "url": "https://www.litmus.com/blog/ultimate-guide-accessible-emails",
+    "supports": "Live text, strong contrast, accessible templates, and ongoing accessibility practices."
+  },
+  "LIT-QA-01": {
+    "publisher": "Litmus",
+    "title": "The Ultimate Email Checklist",
+    "url": "https://www.litmus.com/blog/ultimate-email-checklist",
+    "supports": "Pre-send checks for rendering, plain text, personalization fallbacks, images, ALT text, and dark mode."
+  },
+  "LIT-MOBILE-01": {
+    "publisher": "Litmus",
+    "title": "Why You Should Be Using Responsive Email Templates",
+    "url": "https://www.litmus.com/blog/using-responsive-email-templates",
+    "supports": "Responsive single-column layouts and sufficiently large tappable CTAs."
+  },
+  "LIT-MPP-01": {
+    "publisher": "Litmus",
+    "title": "Email Analytics: How to Measure Email Marketing Success",
+    "url": "https://www.litmus.com/blog/measure-email-marketing-success",
+    "supports": "Open rate is unreliable alone because Apple Mail Privacy Protection obscures true opens."
+  },
+  "LIT-TEST-01": {
+    "publisher": "Litmus",
+    "title": "How Email Content May be Killing Your Deliverability",
+    "url": "https://www.litmus.com/blog/how-email-content-may-be-killing-your-deliverability",
+    "supports": "Validate links, rendering, dark mode, image sizes, accessibility, and seed tests before launch."
+  },
+  "AWS-SES-SEP-01": {
+    "publisher": "Amazon Web Services",
+    "title": "Using configuration sets in Amazon SES",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/using-configuration-sets.html",
+    "supports": "Configuration sets and dedicated IP pools can separate traffic classes such as transactional and marketing mail for distinct reputation management."
+  },
+  "AWS-SES-MON-01": {
+    "publisher": "Amazon Web Services",
+    "title": "Monitoring your Amazon SES sending activity",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/monitor-sending-activity.html",
+    "supports": "Monitor sends, deliveries, bounces, complaints, rejects, opens, clicks, and delivery delays through SES event publishing and metrics."
+  },
+  "AWS-SES-FORMAT-01": {
+    "publisher": "Amazon Web Services",
+    "title": "Email format and Amazon SES",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/send-email-concepts-email-format.html",
+    "supports": "Multipart email can include both HTML and plain-text alternatives for client compatibility and accessibility."
+  },
+  "BRAZE-STRAT-01": {
+    "publisher": "Braze",
+    "title": "AI-powered Email Marketing Strategy for 2026",
+    "url": "https://www.braze.com/resources/articles/the-ultimate-guide-to-creating-a-high-impact-email-marketing-strategy",
+    "supports": "Lifecycle goals, dynamic segments, automation, deliverability, preference centers, and sunset policies."
+  },
+  "BRAZE-CTA-01": {
+    "publisher": "Braze",
+    "title": "Email Campaign Best Practices: A Guide",
+    "url": "https://www.braze.com/resources/articles/email-campaign-best-practices",
+    "supports": "Use a clear, actionable call to action and keep the message focused on the intended next step."
+  },
+  "BRAZE-TRIG-01": {
+    "publisher": "Braze",
+    "title": "What Is a Trigger Campaign?",
+    "url": "https://www.braze.com/resources/articles/trigger-campaign",
+    "supports": "Behavioral and time-based triggers increase relevance across lifecycle stages."
+  },
+  "BRAZE-METRIC-01": {
+    "publisher": "Braze",
+    "title": "Email Metrics That Matter in 2025",
+    "url": "https://www.braze.com/resources/articles/10-essential-email-metrics",
+    "supports": "Align KPIs to goals, segment reporting by lifecycle stage, and use tests to validate changes."
+  },
+  "BRAZE-TRANS-01": {
+    "publisher": "Braze",
+    "title": "Transactional vs. Promotional Emails",
+    "url": "https://www.braze.com/resources/articles/transactional-vs-promotional-email",
+    "supports": "Distinguishes essential service messages from commercial conversion-focused messages."
+  },
+  "BRAZE-HOLIDAY-01": {
+    "publisher": "Braze",
+    "title": "Holiday Email Deliverability Best Practices",
+    "url": "https://www.braze.com/resources/articles/holiday-email-deliverability-best-practices",
+    "supports": "Avoid sudden volume/frequency escalation, offer frequency controls, and expand to less-engaged audiences cautiously."
+  },
+  "KL-WELCOME-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create an email welcome series",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115002775172",
+    "supports": "Immediate welcome, three-email baseline over one week, incentive delivery, story, products, and testing."
+  },
+  "KL-CONSENT-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to collect GDPR-compliant consent",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/360003536031",
+    "supports": "Use granular marketing choices and retain the form ID, capture method, form version, and exact language associated with consent."
+  },
+  "KL-DOI-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "Understanding the double opt-in process",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115005251108",
+    "supports": "Double opt-in verifies a submitted address or number; only confirmed subscribers join the list and enter welcome, while unconfirmed submissions remain outside the subscribed list."
+  },
+  "KL-FORMS-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to reduce spam complaint rates",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/360057985791",
+    "supports": "Signup forms should identify the contacted channels, data use, expected content, and preference or frequency choices; confirmation and double opt-in help align expectations."
+  },
+  "KL-CART-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create an abandoned cart flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115002779411",
+    "supports": "First reminder 2–4 hours after checkout abandonment, second 20–48 hours later, and dynamic cart content."
+  },
+  "KL-BROWSE-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a browse abandonment flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115002775252",
+    "supports": "Use a lighter touch than cart, require viewed-product tracking, exclude later funnel actions, and limit repeat entry."
+  },
+  "KL-POST-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a post-purchase flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/360028872611",
+    "supports": "Post-purchase relationship building, review requests, cross-sell, and sequence examples."
+  },
+  "KL-XSELL-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create an upsell or cross-sell flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115002775212",
+    "supports": "Use placed/fulfilled order triggers, category filters, relevant recommendations, and timing near product receipt."
+  },
+  "KL-REPLEN-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a replenishment flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/360003195232",
+    "supports": "Derive replenishment timing from actual product/customer buying cycles."
+  },
+  "KL-WINBACK-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a winback flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115002775192",
+    "supports": "Re-engage past customers based on inactivity and past purchase behavior."
+  },
+  "KL-SUNSET-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a sunset flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/360017518492",
+    "supports": "Final re-engagement attempt followed by suppression of unresponsive contacts."
+  },
+  "KL-NEVER-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a never engaged segment",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115005078347",
+    "supports": "Identify and avoid repeatedly mailing never-engaged contacts; consider final attempt or suppression."
+  },
+  "KL-PRICE-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a price drop flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/4404249033755",
+    "supports": "Trigger price-drop messages from viewed/checkout behavior and product price changes."
+  },
+  "KL-STOCK-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to build a back in stock flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115003872251",
+    "supports": "Collect explicit back-in-stock interest and send when inventory returns."
+  },
+  "KL-LOWSTOCK-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a low inventory flow",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/21374913673243",
+    "supports": "Send immediately on inventory threshold, exclude recent purchasers, and avoid unnecessary repeated alerts."
+  },
+  "KL-VIP-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "How to create a segment of VIP customers",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/115005065707",
+    "supports": "Engage VIPs with early access, exclusive content, personalized bundles, and surveys."
+  },
+  "KL-SEGTEST-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "Advanced segmentation reference",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/360035312491",
+    "supports": "Use sampled/control segments to validate campaign impact."
+  },
+  "KL-HOLDOUT-01": {
+    "publisher": "Klaviyo Help Center",
+    "title": "Getting started with global holdout groups",
+    "url": "https://help.klaviyo.com/hc/en-us/articles/18138290642971",
+    "supports": "Global holdouts exclude profiles across campaign and flow channels for a defined test window, retain membership history, and allow essential transactional messages."
+  },
+  "HUB-WF-01": {
+    "publisher": "HubSpot Knowledge Base",
+    "title": "Create workflows",
+    "url": "https://knowledge.hubspot.com/workflows/create-workflows",
+    "supports": "Enrollment triggers, filters, actions, re-enrollment, and unenrollment for automated campaigns."
+  },
+  "HUB-AUTO-01": {
+    "publisher": "HubSpot Knowledge Base",
+    "title": "Automate your processes",
+    "url": "https://knowledge.hubspot.com/get-started/automate-your-processes",
+    "supports": "Segment and target high-quality leads before automation."
+  },
+  "HUB-AB-01": {
+    "publisher": "HubSpot Knowledge Base",
+    "title": "Run A/B tests for marketing emails",
+    "url": "https://knowledge.hubspot.com/marketing-email/run-an-a/b-test-on-your-marketing-email",
+    "supports": "Sample-based A/B testing, winning metrics, test duration, and fallback version."
+  },
+  "HUB-B2B-01": {
+    "publisher": "HubSpot",
+    "title": "B2B Email Marketing",
+    "url": "https://blog.hubspot.com/marketing/b2b-email-marketing",
+    "supports": "Segment by industry/role/behavior and measure pipeline sourced, influenced, and velocity."
+  },
+  "HUB-LAUNCH-01": {
+    "publisher": "HubSpot",
+    "title": "How to Create a Product Launch Email",
+    "url": "https://blog.hubspot.com/marketing/how-to-create-a-product-launch-email-outlines-templates",
+    "supports": "Launch-email structure and multi-message product-launch sequence."
+  },
+  "HUB-EVENT-01": {
+    "publisher": "HubSpot Knowledge Base",
+    "title": "Connect HubSpot and Zoom",
+    "url": "https://knowledge.hubspot.com/integrations/use-hubspots-integration-with-zoom",
+    "supports": "Segment registrants, attendees, and no-shows; automate post-event actions."
+  },
+  "HUB-CAL-01": {
+    "publisher": "HubSpot Knowledge Base",
+    "title": "Insert calendar invites into marketing emails",
+    "url": "https://knowledge.hubspot.com/marketing-email/insert-calendar-invites-into-marketing-emails",
+    "supports": "Include Google Calendar and ICS options for broad calendar compatibility."
+  },
+  "MC-NEWS-01": {
+    "publisher": "Mailchimp",
+    "title": "How to Write the Best Email Newsletter",
+    "url": "https://mailchimp.com/resources/email/email-newsletter-examples/",
+    "supports": "Clear header, subject, audience-tailored content, concise structure, and visual interest."
+  },
+  "MC-NEWS-02": {
+    "publisher": "Mailchimp",
+    "title": "How to Create an Impactful Email Newsletter Format",
+    "url": "https://mailchimp.com/resources/email-newsletter-format/",
+    "supports": "Scannable hierarchy, short paragraphs, headings, and layout testing."
+  },
+  "MC-EVENT-01": {
+    "publisher": "Mailchimp",
+    "title": "Optimize Your Event Email Marketing",
+    "url": "https://mailchimp.com/resources/event-email-marketing/",
+    "supports": "Event reminder cadence of roughly two weeks, one week, and one day, plus access/troubleshooting details."
+  },
+  "MC-EVENT-02": {
+    "publisher": "Mailchimp",
+    "title": "Timing Your Event Reminder Emails",
+    "url": "https://mailchimp.com/resources/event-reminder-email/",
+    "supports": "Clear actionable subjects, essential logistics, concise content, and mobile optimization."
+  },
+  "ZOOM-EVENT-01": {
+    "publisher": "Zoom",
+    "title": "Zoom Webinar Checklist",
+    "url": "https://www.zoom.com/en/blog/your-zoom-webinar-management-countdown/",
+    "supports": "Send attendee/registrant follow-up with recording and a next-step CTA."
+  },
+  "MC-RENEW-01": {
+    "publisher": "Mailchimp",
+    "title": "Best Practices for Renewal Email Campaigns",
+    "url": "https://mailchimp.com/resources/membership-renewal-email/",
+    "supports": "Renewal sequence beginning 45–60 days before expiry, then 30 days, 7–10 days, and 1–3 days."
+  },
+  "MC-REF-01": {
+    "publisher": "Mailchimp",
+    "title": "Referral Email Examples, Templates & Tips",
+    "url": "https://mailchimp.com/resources/referral-emails/",
+    "supports": "Segment referral asks, automate prompts, coordinate timing, and track referral links."
+  },
+  "MC-REF-02": {
+    "publisher": "Mailchimp",
+    "title": "How to Maximize Referral Sources for Higher Conversions",
+    "url": "https://mailchimp.com/resources/referral-sources/",
+    "supports": "Track referral codes, actual sales, customer value, and source quality."
+  },
+  "MC-FOLLOW-01": {
+    "publisher": "Mailchimp",
+    "title": "Automated Email Follow-Ups Boost Engagement and Action",
+    "url": "https://mailchimp.com/resources/automated-email-follow-up/",
+    "supports": "Use a prompt follow-up, value-added messages, and a clear final next step; generally 2–5 follow-ups depending on context."
+  },
+  "MC-RESEND-01": {
+    "publisher": "Mailchimp",
+    "title": "Resend an Unopened Email",
+    "url": "https://mailchimp.com/help/resend-an-unopened-campaign/",
+    "supports": "Resending can increase unsubscribes and complaints, especially when repeated; use cautiously."
+  },
+  "AWS-SES-WARM-01": {
+    "publisher": "Amazon Web Services",
+    "title": "Warming up dedicated IP addresses (standard)",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/dedicated-ip-warming.html",
+    "supports": "New sending domains/IPs need gradual volume warm-up (reputation-building time varies by provider); automatic SES warm-up ramps over 45 days; send to engaged recipients first and avoid a sudden large volume increase after warm-up completes."
+  },
+  "GOOGLE-DMARC-01": {
+    "publisher": "Google Workspace Admin Help",
+    "title": "Set up DMARC",
+    "url": "https://knowledge.workspace.google.com/admin/security/set-up-dmarc",
+    "supports": "DMARC record location is a `_dmarc.<domain>` TXT record with a required `p=` policy tag (none/quarantine/reject); set up SPF and DKIM first; a message passes DMARC via SPF authentication+alignment or DKIM authentication+alignment."
+  },
+  "IETF-RFC8058-01": {
+    "publisher": "IETF",
+    "title": "RFC 8058: Signaling One-Click Functionality for List Email Headers",
+    "url": "https://www.rfc-editor.org/rfc/rfc8058.txt",
+    "supports": "Defines one-click unsubscribe: an HTTPS `List-Unsubscribe` URI plus `List-Unsubscribe-Post: List-Unsubscribe=One-Click`, processed by a single POST with no confirmation page."
+  },
+  "MS-SNDS-01": {
+    "publisher": "Microsoft",
+    "title": "Outlook.com postmaster / IP and domain management",
+    "url": "https://substrate.office.com/ip-domain-management-snds/postmaster",
+    "supports": "Since May 5, 2025, Outlook.com enforces SPF/DKIM/DMARC authentication for domains sending 5,000+ messages per day; unauthenticated qualifying mail is junked, with rejection planned for continued non-compliance."
+  }
+}
