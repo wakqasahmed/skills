@@ -25,6 +25,8 @@ Assess whether a site answers the questions AI systems need to answer for users.
 
 ## Guardrails
 
-- Do not invent product claims, pricing, policies, benchmarks, or customer proof.
+See [Shared Guardrails](../references/guardrails.md) for the cross-cutting rule on not
+fabricating unverifiable content.
+
 - Prefer specific page edits over generic content advice.
 - Keep recommendations tied to user questions and citation value.

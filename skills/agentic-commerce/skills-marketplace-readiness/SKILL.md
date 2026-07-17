@@ -15,11 +15,13 @@ description: Prepare an agent skills repository for discovery, installation, and
    - `.claude-plugin/plugin.json` with all published skill paths.
    - `scripts/list-skills.sh` and `scripts/link-skills.sh` for local fallback.
 4. Validate that all plugin paths resolve and each listed skill has a `SKILL.md`.
-5. Position the repo around searchable intent, not internal naming: use words buyers and agents search for, such as ecommerce, agentic commerce, AEO, GEO, SEO, agent readiness, checkout, ACP, UCP, MCP, and AI crawler readiness.
-6. Submit or seed marketplace visibility by installing with the public CLI, sharing the GitHub URL, adding the badge, and linking the repo from website, docs, social profiles, and relevant skill directories.
+5. Confirm safety-relevant skills — those that can drive autonomous checkout, payment, support actions, or other agent-executed changes — have a behavioral eval (fixtures plus a pass/fail runner) wired into CI. A skill that only has prose guardrails and no eval coverage is not marketplace-ready.
+6. Position the repo around searchable intent, not internal naming: use words buyers and agents search for, such as ecommerce, agentic commerce, AEO, GEO, SEO, agent readiness, checkout, ACP, UCP, MCP, and AI crawler readiness.
+7. Submit or seed marketplace visibility by installing with the public CLI, sharing the GitHub URL, adding the badge, and linking the repo from website, docs, social profiles, and relevant skill directories.
 
 ## Guardrails
 
 - Do not inflate install claims or marketplace status before the repo appears publicly.
 - Do not bundle unrelated workflow skills into the domain repo. Keep engineering workflow skills in a separate repo.
 - Treat marketplace listings as distribution, not validation. Skill quality still depends on real execution and iteration.
+- Do not call a pack marketplace-ready if a safety-relevant skill lacks behavioral eval or CI coverage.

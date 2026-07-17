@@ -51,9 +51,14 @@
     "./skills/email-marketing/19-lifecycle-orchestration",
     "./skills/email-marketing/20-list-growth-signup-preferences",
     "./skills/email-marketing/21-deliverability-sender-operations",
-    "./skills/filament/conventions",
-    "./skills/filament/plugin-first",
-    "./skills/laravel/conventions",
-    "./skills/php/principles"
+    "./skills/engineering/changesets-release",
+    "./skills/engineering/to-prd",
+    "./skills/filament/filament-conventions",
+    "./skills/filament/filament-plugin-first",
+    "./skills/filament/livewire-conventions",
+    "./skills/laravel/laravel-conventions",
+    "./skills/laravel/laravel-security",
+    "./skills/laravel/laravel-testing",
+    "./skills/php/php-principles"
   ]
 }

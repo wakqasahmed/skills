@@ -40,6 +40,8 @@ This is the orchestrator: it finds and ranks blockers, then hands deep dives to 
 
 ## Guardrails
 
-- Do not claim AI platform inclusion or ranking guarantees.
+See [Shared Guardrails](../references/guardrails.md) for the cross-cutting rule on not
+claiming AI platform outcome guarantees.
+
 - Distinguish observed page evidence from inferred recommendations.
 - Prefer public crawlable evidence unless the user provides private analytics or Search Console data.

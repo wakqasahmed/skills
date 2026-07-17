@@ -1,0 +1,18 @@
+{
+  "fixture": "genuinely-ready.scenario.json",
+  "description": "Positive control: AP2 scored ready with identity verification, explicit per-transaction consent capture, audit logging of agent-initiated payments, fraud controls, and a human escalation path all in place.",
+  "protocol_readiness": {
+    "AP2": "ready",
+    "x402": "partial",
+    "MCP": "verified",
+    "ACP": "ready",
+    "A2A": "not applicable"
+  },
+  "safeguards": {
+    "identity_verification": true,
+    "consent_capture": true,
+    "audit_logs": true,
+    "fraud_controls": true,
+    "human_escalation": true
+  }
+}

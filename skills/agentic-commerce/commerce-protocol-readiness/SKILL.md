@@ -23,5 +23,4 @@ description: Audit an ecommerce storefront for agentic commerce protocols and ac
 ## Guardrails
 
 - Do not treat a protocol as required just because it exists. Tie it to a concrete customer or agent workflow.
-- Do not recommend autonomous payments without identity, consent, audit logs, fraud controls, and human escalation.
-- Separate public evidence from verified internal implementation evidence.
+- See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).
