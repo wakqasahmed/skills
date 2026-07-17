@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -27,6 +28,39 @@ readme = (root / "README.md").read_text()
 canonical_install = "npx skills@latest add wakqasahmed/skills"
 if readme.count(canonical_install) != 1:
     raise SystemExit("README must contain exactly one canonical install path")
+
+browse_skills = re.search(r"^## Browse Skills\s*$([\s\S]*?)(?=^## |\Z)", readme, re.MULTILINE)
+if not browse_skills:
+    raise SystemExit("README must contain a Browse Skills section")
+
+category_links = []
+navigated_skills = []
+misfiled_skills = []
+current_category = None
+for line in browse_skills.group(1).splitlines():
+    category_match = re.fullmatch(r"### \[[^]]+\]\(skills/([^/]+)/\)", line)
+    if category_match:
+        current_category = category_match.group(1)
+        category_links.append(current_category)
+        continue
+
+    skill_match = re.fullmatch(r"- \[[^]]+\]\(skills/([^/]+)/([^/]+)/\)", line)
+    if skill_match:
+        category, skill = skill_match.groups()
+        navigated_skills.append(f"skills/{category}/{skill}")
+        if category != current_category:
+            misfiled_skills.append(f"skills/{category}/{skill}")
+
+expected_categories = sorted({Path(skill).parts[1] for skill in listed})
+navigation_errors = []
+if sorted(category_links) != expected_categories or len(category_links) != len(set(category_links)):
+    navigation_errors.append("category links must list each skill category exactly once")
+if sorted(navigated_skills) != listed or len(navigated_skills) != len(set(navigated_skills)):
+    navigation_errors.append("skill links must list each manifest skill exactly once")
+if misfiled_skills:
+    navigation_errors.append("skill links must appear under their category")
+if navigation_errors:
+    raise SystemExit("README skill navigation: " + "; ".join(navigation_errors))
 
 former_source_repos = (
     "wakqasahmed/ai-visibility-skills",

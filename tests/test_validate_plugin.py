@@ -54,6 +54,25 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertIn("sticky_summary: 'true'", workflow)
         self.assertIn("incremental: 'true'", workflow)
 
+    def write_readme(self, root: Path, skill_paths: list[str]) -> None:
+        categories: dict[str, list[str]] = {}
+        for skill_path in skill_paths:
+            _, category, skill = skill_path.split("/")
+            categories.setdefault(category, []).append(skill)
+
+        navigation = []
+        for category, skills in sorted(categories.items()):
+            navigation.append(f"### [{category.title()}](skills/{category}/)")
+            navigation.extend(
+                f"- [{skill}](skills/{category}/{skill}/)" for skill in skills
+            )
+
+        (root / "README.md").write_text(
+            "npx skills@latest add wakqasahmed/skills\n\n## Browse Skills\n\n"
+             + "\n".join(navigation)
+             + "\n"
+        )
+
     def make_repository(self) -> Path:
         temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(temporary_directory.cleanup)
@@ -62,12 +81,16 @@ class ValidatePluginTest(unittest.TestCase):
         (root / "scripts").mkdir()
         shutil.copy2(VALIDATOR, root / "scripts" / "validate-plugin.py")
         (root / ".claude-plugin").mkdir()
-        (root / ".claude-plugin" / "plugin.json").write_text(
-            json.dumps({"skills": ["skills/example/example-skill"]})
-        )
+        skill_paths = [
+            "skills/example/example-skill",
+            "skills/other/other-skill",
+        ]
+        (root / ".claude-plugin" / "plugin.json").write_text(json.dumps({"skills": skill_paths}))
         (root / "skills" / "example" / "example-skill").mkdir(parents=True)
         (root / "skills" / "example" / "example-skill" / "SKILL.md").write_text("# Example\n")
-        (root / "README.md").write_text("npx skills@latest add wakqasahmed/skills\n")
+        (root / "skills" / "other" / "other-skill").mkdir(parents=True)
+        (root / "skills" / "other" / "other-skill" / "SKILL.md").write_text("# Other\n")
+        self.write_readme(root, skill_paths)
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         return root
@@ -124,3 +147,22 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("source-sync automation", result.stderr)
         self.assertIn(".github/workflows/sync-check.yml", result.stderr)
+
+    def test_rejects_missing_or_duplicate_skill_navigation(self) -> None:
+        root = self.make_repository()
+        readme = root / "README.md"
+        readme.write_text(
+            readme.read_text().replace(
+                "- [other-skill](skills/other/other-skill/)\n", ""
+            ).replace(
+                "- [example-skill](skills/example/example-skill/)\n",
+                "- [example-skill](skills/example/example-skill/)\n"
+                "- [example-skill](skills/example/example-skill/)\n",
+            )
+        )
+        subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
+
+        result = self.validate(root)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("README skill navigation", result.stderr)
