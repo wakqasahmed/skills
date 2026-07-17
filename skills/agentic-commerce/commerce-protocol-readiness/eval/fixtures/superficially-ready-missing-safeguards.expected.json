@@ -1,0 +1,6 @@
+{
+  "fixture": "superficially-ready-missing-safeguards.scenario.json",
+  "expected_decision": "do_not_recommend",
+  "expected_missing_safeguards": ["identity_verification", "consent_capture", "audit_logs"],
+  "notes": "Strong protocol/checkout readiness must not override the guardrail against recommending autonomous payments without identity, consent, and an audit log."
+}

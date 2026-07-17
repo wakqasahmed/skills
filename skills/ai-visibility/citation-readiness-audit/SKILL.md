@@ -25,6 +25,8 @@ Check whether AI systems can cite the site confidently.
 
 ## Guardrails
 
-- Do not make unverifiable claims sound authoritative.
+See [Shared Guardrails](../references/guardrails.md) for the cross-cutting rule on not
+fabricating or overstating unverifiable content.
+
 - Separate first-party claims from third-party evidence.
 - Flag legal, medical, financial, or safety-sensitive claims for human review.

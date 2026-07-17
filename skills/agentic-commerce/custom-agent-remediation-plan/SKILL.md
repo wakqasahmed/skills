@@ -15,5 +15,5 @@ description: Convert Agentic Commerce audit findings into a custom-agent impleme
 
 ## Guardrails
 
-- Sell the public offer as a custom agent, not an internal runtime.
+- See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).
 - Do not promise full automation where supervised workflows are safer.

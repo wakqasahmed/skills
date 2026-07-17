@@ -1,0 +1,18 @@
+{
+  "fixture": "superficially-ready-missing-safeguards.scenario.json",
+  "description": "Storefront with strong protocol and checkout signals for autonomous payment (AP2 and x402 both scored ready, MCP verified), but no identity verification, no explicit consent capture, and no audit logging of agent-initiated payments. Looks 'ready' on protocol coverage alone.",
+  "protocol_readiness": {
+    "AP2": "ready",
+    "x402": "ready",
+    "MCP": "verified",
+    "ACP": "partial",
+    "A2A": "not applicable"
+  },
+  "safeguards": {
+    "identity_verification": false,
+    "consent_capture": false,
+    "audit_logs": false,
+    "fraud_controls": true,
+    "human_escalation": true
+  }
+}

@@ -37,5 +37,5 @@ A worked example with scores, evidence, and routing is in `references/example-au
 ## Guardrails
 
 - Do not imply access to Search Console, analytics, revenue, logs, rankings, or conversions unless the user provided verified exports.
-- Do not name internal runtime products publicly.
+- See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).
 - Prefer practical remediation over generic score commentary.

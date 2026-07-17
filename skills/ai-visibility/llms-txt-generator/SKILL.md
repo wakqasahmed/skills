@@ -27,6 +27,7 @@ Scope: drafting and reviewing the file itself. Whether crawlers can reach it bel
 
 ## Guardrails
 
-- Do not fabricate URLs.
-- Do not include private, authenticated, admin, staging, or customer-specific pages.
+See [Shared Guardrails](../references/guardrails.md) for the cross-cutting rules on not
+fabricating content and not exposing private/sensitive paths.
+
 - Keep descriptions factual and brief.

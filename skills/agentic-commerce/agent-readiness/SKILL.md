@@ -24,4 +24,4 @@ Run the checks with the commands in `references/checks.md` and cite command outp
 ## Guardrails
 
 - Separate read readiness from action readiness.
-- Do not recommend autonomous checkout or support actions without approval, policy, and audit controls.
+- See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).

@@ -1,0 +1,18 @@
+{
+  "fixture": "discovery-only-no-payment-protocol.scenario.json",
+  "description": "Discovery-only storefront: no payment protocol has reached ready or verified, so the autonomous-payment guardrail is not yet triggered regardless of safeguard state.",
+  "protocol_readiness": {
+    "AP2": "missing",
+    "x402": "not applicable",
+    "MCP": "partial",
+    "ACP": "missing",
+    "A2A": "not applicable"
+  },
+  "safeguards": {
+    "identity_verification": false,
+    "consent_capture": false,
+    "audit_logs": false,
+    "fraud_controls": false,
+    "human_escalation": true
+  }
+}

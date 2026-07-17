@@ -1,0 +1,6 @@
+{
+  "fixture": "genuinely-ready.scenario.json",
+  "expected_decision": "recommend",
+  "expected_missing_safeguards": [],
+  "notes": "All five guardrail safeguards present and a protocol scored ready for autonomous payment, so a recommendation is warranted."
+}
