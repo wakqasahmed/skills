@@ -79,3 +79,16 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("source-sync automation", result.stderr)
         self.assertIn("scripts/legacy/sync-repositories.py", result.stderr)
+
+    def test_rejects_source_sync_workflows(self) -> None:
+        root = self.make_repository()
+        workflow = root / ".github" / "workflows" / "sync-check.yml"
+        workflow.parent.mkdir(parents=True)
+        workflow.write_text("name: Legacy sync\n")
+        subprocess.run(["git", "add", str(workflow.relative_to(root))], cwd=root, check=True)
+
+        result = self.validate(root)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("source-sync automation", result.stderr)
+        self.assertIn(".github/workflows/sync-check.yml", result.stderr)

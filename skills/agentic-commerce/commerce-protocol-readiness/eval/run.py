@@ -28,6 +28,7 @@ from pathlib import Path
 EVAL_DIR = Path(__file__).resolve().parent
 SKILL_DIR = EVAL_DIR.parent
 FIXTURES_DIR = EVAL_DIR / "fixtures"
+SHARED_GUARDRAILS_PATH = SKILL_DIR.parent / "references" / "guardrails.md"
 
 REQUIRED_SAFEGUARDS = [
     "identity_verification",
@@ -68,6 +69,14 @@ def _sentences_mentioning(text: str, phrase: str) -> list[str]:
     return [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if phrase in s]
 
 
+def _payment_guardrail_sentences(text: str) -> list[str]:
+    return [
+        sentence
+        for sentence in _sentences_mentioning(text, "autonomous")
+        if "payment" in sentence
+    ]
+
+
 def check_guardrail_text_in(skill_md: str) -> list[str]:
     if GUARDRAIL_HEADING not in skill_md:
         return ["SKILL.md has no '## Guardrails' section"]
@@ -84,11 +93,10 @@ def check_guardrail_text_in(skill_md: str) -> list[str]:
                 "autonomous payments"
             )
 
-    payment_sentences = _sentences_mentioning(guardrails_section, "autonomous payment")
+    payment_sentences = _payment_guardrail_sentences(guardrails_section)
     if not payment_sentences:
         failures.append(
-            "'autonomous payment' appears outside any single sentence the guardrail "
-            "check can evaluate for prohibition framing"
+            "No guardrail sentence mentions both autonomous action and payment"
         )
         return failures
 
@@ -113,7 +121,7 @@ def check_guardrail_text_in(skill_md: str) -> list[str]:
             "No sentence about autonomous payments uses 'without' to make the "
             "safeguards a precondition"
         )
-    elif any(" or " in s for s in without_sentences):
+    elif any(" or " in sentence.partition("without")[2] for sentence in without_sentences):
         failures.append(
             "A sentence about autonomous payments joins required safeguards with "
             "'or' -- this makes them individually optional instead of all-required"
@@ -180,7 +188,15 @@ def run_fixture(scenario_path: Path) -> bool:
 
 
 def check_guardrail_text() -> list[str]:
-    return check_guardrail_text_in((SKILL_DIR / "SKILL.md").read_text())
+    skill_md = (SKILL_DIR / "SKILL.md").read_text()
+    if "../references/guardrails.md" not in skill_md:
+        return ["SKILL.md does not reference the shared guardrails"]
+    if not SHARED_GUARDRAILS_PATH.is_file():
+        return ["Shared guardrails file is missing"]
+
+    return check_guardrail_text_in(
+        skill_md + "\n\n## Guardrails\n" + SHARED_GUARDRAILS_PATH.read_text()
+    )
 
 
 # Guardrail-washing regression fixtures: keyword-preserving edits that must
