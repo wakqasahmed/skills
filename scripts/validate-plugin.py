@@ -22,16 +22,28 @@ if listed != actual:
     raise SystemExit("; ".join(details))
 
 readme = (root / "README.md").read_text()
-required_readme_text = [
-    "npx skills@latest add wakqasahmed/skills",
-    "npx skills@latest add wakqasahmed/ai-visibility-skills",
-    "npx skills@latest add wakqasahmed/agentic-commerce-skills",
-    "npx skills@latest add wakqasahmed/ai-engineering-workflow-skills",
-    "npx skills@latest add wakqasahmed/php-laravel-filament-skills",
-    "npx skills@latest add wakqasahmed/email-marketing-skills",
+canonical_install = "npx skills@latest add wakqasahmed/skills"
+if readme.count(canonical_install) != 1:
+    raise SystemExit("README must contain exactly one canonical install path")
+
+former_source_repos = [
+    "wakqasahmed/ai-visibility-skills",
+    "wakqasahmed/agentic-commerce-skills",
+    "wakqasahmed/ai-engineering-workflow-skills",
+    "wakqasahmed/php-laravel-filament-skills",
+    "wakqasahmed/email-marketing-skills",
 ]
-missing_readme_text = [text for text in required_readme_text if text not in readme]
-if missing_readme_text:
-    raise SystemExit("Missing README install paths: " + ", ".join(missing_readme_text))
+source_references = [repo for repo in former_source_repos if repo in readme]
+if source_references:
+    raise SystemExit("README refers to former source repos: " + ", ".join(source_references))
+
+obsolete_automation = [
+    root / "scripts" / "sync-from-source.sh",
+    root / "scripts" / "sync-plugin-manifest.py",
+    root / ".github" / "workflows" / "sync-check.yml",
+]
+remaining_automation = [str(path.relative_to(root)) for path in obsolete_automation if path.exists()]
+if remaining_automation:
+    raise SystemExit("Obsolete source-sync automation remains: " + ", ".join(remaining_automation))
 
 print(f"validated {len(skills)} plugin skills")
