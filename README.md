@@ -31,12 +31,21 @@ skills/
   laravel/
   php/
   email-marketing/
+support/
+  ai-engineering-workflow/
+  email-marketing/
 ```
 
 ## Validate
 
 ```bash
 python3 scripts/validate-plugin.py
+python3 support/email-marketing/scripts/validate-citations.py
+python3 support/email-marketing/scripts/validate-orchestration.py
+python3 support/email-marketing/scripts/validate-list-growth.py
+python3 support/email-marketing/scripts/validate-deliverability.py
+bash support/ai-engineering-workflow/scripts/test-ai-agent-pr-metadata.sh
+bash support/ai-engineering-workflow/scripts/test-install-user.sh
 ```
 
 ## Security
