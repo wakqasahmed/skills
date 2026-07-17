@@ -8,12 +8,16 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = REPOSITORY_ROOT / "scripts" / "validate-plugin.py"
-RETIRED_REPOSITORIES = (
-    "wakqasahmed/ai-visibility-skills",
-    "wakqasahmed/agentic-commerce-skills",
-    "wakqasahmed/ai-engineering-workflow-skills",
-    "wakqasahmed/php-laravel-filament-skills",
-    "wakqasahmed/email-marketing-skills",
+REPOSITORY_OWNER = "wakqasahmed/"
+RETIRED_REPOSITORIES = tuple(
+    REPOSITORY_OWNER + name
+    for name in (
+        "ai-visibility-skills",
+        "agentic-commerce-skills",
+        "ai-engineering-workflow-skills",
+        "php-laravel-filament-skills",
+        "email-marketing-skills",
+    )
 )
 
 
