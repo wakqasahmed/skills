@@ -24,4 +24,5 @@ Run the checks with the commands in `references/checks.md` and cite command outp
 ## Guardrails
 
 - Separate read readiness from action readiness.
+- Return explicit blocker codes for unavailable crawl access, raw-HTML product gaps, missing product facts, policy/support gaps, or an unknown action boundary; do not call an action safe merely because catalog content is readable.
 - See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).
