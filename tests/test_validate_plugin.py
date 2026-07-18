@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -22,6 +23,37 @@ RETIRED_REPOSITORIES = tuple(
 
 
 class ValidatePluginTest(unittest.TestCase):
+    def test_open_code_review_workflow_contract(self) -> None:
+        workflow = (
+            REPOSITORY_ROOT / ".github" / "workflows" / "open-code-review.yml"
+        ).read_text()
+
+        self.assertIn("pull_request:\n    types: [opened, synchronize, reopened]", workflow)
+        self.assertNotIn("pull_request_target:", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertIn("pull-requests: write", workflow)
+        self.assertIn("uses: alibaba/open-code-review@v1.7.12", workflow)
+        self.assertIn(
+            "if: github.event.pull_request.head.repo.full_name == github.repository",
+            workflow,
+        )
+        ocr_inputs = re.findall(
+            r"^          (llm_(?:url|auth_token|model|use_anthropic)): (.+)$",
+            workflow,
+            flags=re.MULTILINE,
+        )
+        self.assertEqual(
+            ocr_inputs,
+            [
+                ("llm_url", "${{ secrets.OCR_LLM_URL }}"),
+                ("llm_auth_token", "${{ secrets.OCR_LLM_AUTH_TOKEN }}"),
+                ("llm_model", "${{ secrets.OCR_LLM_MODEL }}"),
+                ("llm_use_anthropic", "${{ secrets.OCR_USE_ANTHROPIC }}"),
+            ],
+        )
+        self.assertIn("sticky_summary: 'true'", workflow)
+        self.assertIn("incremental: 'true'", workflow)
+
     def make_repository(self) -> Path:
         temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(temporary_directory.cleanup)
