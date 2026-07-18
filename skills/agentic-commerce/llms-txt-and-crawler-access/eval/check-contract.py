@@ -19,9 +19,29 @@ REQUIRED_CASE_FIELDS = {"id", "split", "prompt", "expected_skill_usage", "expect
 
 
 def main() -> int:
-    skill = SKILL.read_text()
+    try:
+        skill = SKILL.read_text()
+    except OSError as error:
+        print("FAIL: llms/crawler static contract")
+        print(f"cannot read SKILL.md: {error}")
+        return 1
+
     failures = [f"missing SKILL.md contract: {term}" for term in REQUIRED_SKILL_TEXT if term not in skill]
-    cases = json.loads(CASES.read_text())["cases"]
+    try:
+        cases = json.loads(CASES.read_text()).get("cases")
+    except OSError as error:
+        print("FAIL: llms/crawler static contract")
+        print(f"cannot read held-out cases: {error}")
+        return 1
+    except json.JSONDecodeError as error:
+        print("FAIL: llms/crawler static contract")
+        print(f"invalid held-out cases JSON: {error}")
+        return 1
+    if not isinstance(cases, list):
+        print("FAIL: llms/crawler static contract")
+        print("held-out cases must contain a cases list")
+        return 1
+
     if len(cases) < 10:
         failures.append("fewer than 10 held-out cases")
     usage = {"use": 0, "do_not_use": 0}
@@ -30,8 +50,11 @@ def main() -> int:
         if missing or case["split"] != "held_out" or not case["expected_safety_outcome"]:
             failures.append(f"invalid held-out case: {case.get('id', '<unknown>')}")
             continue
-        if case["expected_skill_usage"] in usage:
-            usage[case["expected_skill_usage"]] += 1
+        skill_usage = case["expected_skill_usage"]
+        if skill_usage not in usage:
+            failures.append(f"invalid expected_skill_usage '{skill_usage}' in case: {case.get('id', '<unknown>')}")
+            continue
+        usage[skill_usage] += 1
     if any(count < 5 for count in usage.values()):
         failures.append("held-out cases must include at least 5 use and 5 do-not-use cases")
     if failures:

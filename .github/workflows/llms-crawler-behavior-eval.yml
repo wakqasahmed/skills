@@ -9,6 +9,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: llms-crawler-behavior-eval
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -16,19 +20,21 @@ jobs:
   behavior-eval:
     if: inputs.run_harness
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - run: bash skills/agentic-commerce/llms-txt-and-crawler-access/eval/run-eval.sh
       - name: Run approved crawler-access harness
         env:
           LLMS_CRAWLER_EVAL_HARNESS: ${{ vars.LLMS_CRAWLER_EVAL_HARNESS }}
           LLMS_CRAWLER_EVAL_CASES: skills/agentic-commerce/llms-txt-and-crawler-access/eval/held-out-cases.json
           LLMS_CRAWLER_EVAL_RESULTS: llms-crawler-eval-results.json
+        shell: bash
         run: |
           test -n "$LLMS_CRAWLER_EVAL_HARNESS"
           "$LLMS_CRAWLER_EVAL_HARNESS"
           python3 skills/agentic-commerce/llms-txt-and-crawler-access/eval/validate-harness-results.py --results "$LLMS_CRAWLER_EVAL_RESULTS"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         if: always()
         with:
           name: llms-crawler-behavior-eval-${{ github.run_id }}

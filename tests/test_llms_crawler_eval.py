@@ -41,6 +41,63 @@ class LlmsCrawlerEvalTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("PASS: llms/crawler static contract", result.stdout)
 
+    def test_static_contract_rejects_invalid_skill_usage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            eval_dir = workspace / "eval"
+            eval_dir.mkdir()
+            (workspace / "SKILL.md").write_text((EVAL_DIR.parent / "SKILL.md").read_text())
+            cases = json.loads(CASES.read_text())
+            cases["cases"][0]["expected_skill_usage"] = "invalid"
+            (eval_dir / "held-out-cases.json").write_text(json.dumps(cases))
+            (eval_dir / "check-contract.py").write_text(CONTRACT.read_text())
+            result = subprocess.run(
+                ["python3", str(eval_dir / "check-contract.py")],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid expected_skill_usage 'invalid'", result.stdout)
+
+    def test_harness_validator_reports_invalid_results_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            results = Path(directory) / "results.json"
+            results.write_text("{")
+            result = subprocess.run(
+                ["python3", str(VALIDATOR), "--results", str(results)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ERROR: invalid results JSON", result.stdout)
+
+    def test_harness_validator_reports_missing_results_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            results = Path(directory) / "missing.json"
+            result = subprocess.run(
+                ["python3", str(VALIDATOR), "--results", str(results)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ERROR: cannot read results", result.stdout)
+
+    def test_harness_validator_names_invalid_record_fields(self):
+        validator = load_validator()
+        failures, _ = validator.validate([{
+            "case_id": "missing",
+            "condition": "unknown",
+            "trial": 0,
+        }])
+
+        self.assertIn("invalid case_id: missing", failures)
+
     def test_harness_validator_requires_ablation_delta(self):
         cases = json.loads(CASES.read_text())["cases"]
         records = []
