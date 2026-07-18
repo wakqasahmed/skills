@@ -36,7 +36,11 @@ def terms(text: str) -> set[str]:
 
 def matches(prompt: str, description: str) -> bool:
     """Require two meaningful prompt words from the real SKILL.md description."""
-    return len(terms(prompt) & terms(description)) >= 2
+    return score(prompt, description) >= 2
+
+
+def score(prompt: str, description: str) -> int:
+    return len(terms(prompt) & terms(description))
 
 
 def discovered_skills(root: Path) -> set[str]:
@@ -47,19 +51,26 @@ def cases_for_split(cases: list[dict], split: str) -> list[dict]:
     return cases if split == "all" else [case for case in cases if case["split"] == split]
 
 
+def routed_skills(prompt: str, descriptions: dict[str, str]) -> set[str]:
+    scores = {skill: score(prompt, description) for skill, description in descriptions.items()}
+    highest_score = max(scores.values(), default=0)
+    if highest_score < 2:
+        return set()
+    return {skill for skill, value in scores.items() if value == highest_score}
+
+
 def evaluate(cases: list[dict], split: str, root: Path = ROOT) -> dict[str, dict[str, int]]:
     metrics: dict[str, dict[str, int]] = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
+    descriptions = {skill: skill_description(skill, root) for skill in discovered_skills(root)}
     for case in cases_for_split(cases, split):
-        description = skill_description(case["skill"], root)
-        for expected, prompt in ((True, case["positive"]), (False, case["negative"])):
-            actual = matches(prompt, description)
-            counts = metrics[case["category"]]
-            if actual and expected:
-                counts["tp"] += 1
-            elif actual:
-                counts["fp"] += 1
-            elif expected:
-                counts["fn"] += 1
+        counts = metrics[case["category"]]
+        positive_routes = routed_skills(case["positive"], descriptions)
+        if case["skill"] in positive_routes:
+            counts["tp"] += 1
+        else:
+            counts["fn"] += 1
+        counts["fp"] += len(positive_routes - {case["skill"]})
+        counts["fp"] += len(routed_skills(case["negative"], descriptions))
     return metrics
 
 

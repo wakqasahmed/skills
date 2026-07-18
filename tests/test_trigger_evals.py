@@ -59,6 +59,31 @@ class TriggerEvalTest(unittest.TestCase):
             skill_path.write_text("---\nname: unrelated\ndescription: Schedule a garden party.\n---\n")
             self.assertFalse(runner.matches(case["positive"], runner.skill_description(case["skill"], fixture_root)))
 
+    def test_evaluation_counts_other_routed_skills_as_false_positives(self):
+        runner = load_runner()
+        cases = [{
+            "skill": "category/target",
+            "category": "test",
+            "positive": "Route this database migration safely.",
+            "negative": "Arrange a garden party.",
+            "split": "validation",
+        }]
+
+        with tempfile.TemporaryDirectory() as directory:
+            fixture_root = Path(directory)
+            for skill in ("category/target", "category/other"):
+                skill_path = fixture_root / "skills" / skill / "SKILL.md"
+                skill_path.parent.mkdir(parents=True, exist_ok=True)
+                skill_path.write_text(
+                    f"---\nname: {skill.rsplit('/', 1)[1]}\n"
+                    "description: Route database migration safely.\n---\n"
+                )
+
+            self.assertEqual(
+                runner.evaluate(cases, "validation", fixture_root),
+                {"test": {"tp": 1, "fp": 1, "fn": 0}},
+            )
+
     def test_runner_passes_train_and_validation_without_network(self):
         for split in ("train", "validation"):
             result = subprocess.run(["python3", str(RUNNER), "--split", split], text=True, capture_output=True)
