@@ -86,12 +86,47 @@ class OcrDispositionTests(unittest.TestCase):
 
         self.assertEqual(failures, ["Fixed OCR finding 42 needs a commit on this PR"])
 
+    def test_finds_a_latest_head_finding_after_the_first_page(self):
+        comments = [
+            {"id": index, "commit_id": "old", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-page -->"}
+            for index in range(100)
+        ]
+        comments.append({"id": 101, "commit_id": "latest", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-page -->"})
+
+        failures = governance.validate_ocr_dispositions("latest", comments, [], [{"sha": "latest"}])
+
+        self.assertEqual(failures, ["OCR finding 101 on latest head is undispositioned"])
+
 
 class AgentLabelTests(unittest.TestCase):
     def test_rejects_bare_alias_and_preserves_historical_labels(self):
         fixture = json.loads((FIXTURES / "agent-labels.json").read_text())
 
         failures = governance.validate_agent_labels(**fixture)
+
+        self.assertEqual(failures, ["Invalid agent label: agent:gpt5-high-reviewer"])
+
+    def test_rejects_role_labels_when_model_id_is_unavailable(self):
+        failures = governance.validate_pr_agent_metadata({
+            "body": "- Resolved model ID: unavailable\n- Metadata limitation: runtime did not expose it",
+            "labels": [{"name": "agent:gpt5-high-reviewer"}],
+        })
+
+        self.assertEqual(failures, ["Invalid agent label: agent:gpt5-high-reviewer"])
+
+    def test_requires_a_limitation_when_model_id_is_unavailable(self):
+        failures = governance.validate_pr_agent_metadata({
+            "body": "- Resolved model ID: unavailable\n- Metadata limitation: N/A",
+            "labels": [],
+        })
+
+        self.assertEqual(failures, ["PR with unavailable model ID needs a metadata limitation"])
+
+    def test_rejects_a_pr_label_that_does_not_match_the_recorded_model(self):
+        failures = governance.validate_pr_agent_metadata({
+            "body": "- Resolved model ID: gpt5.6-terra\n- Metadata limitation: N/A",
+            "labels": [{"name": "agent:gpt5-high-reviewer"}],
+        })
 
         self.assertEqual(failures, ["Invalid agent label: agent:gpt5-high-reviewer"])
 
@@ -105,6 +140,10 @@ class OcrDispositionWorkflowTests(unittest.TestCase):
         self.assertIn("issue_comment:", workflow)
         self.assertIn("statuses: write", workflow)
         self.assertIn("--pr-commits", workflow)
+        self.assertIn("?ref=$HEAD_SHA", workflow)
+        self.assertIn("/tmp/verify-pr-governance.py", workflow)
+        self.assertIn("--paginate --slurp", workflow)
+        self.assertIn("--pr /tmp/pr.json", workflow)
 
 
 if __name__ == "__main__":
