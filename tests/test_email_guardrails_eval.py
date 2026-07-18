@@ -1,6 +1,7 @@
 import json
 import importlib.util
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -54,4 +55,21 @@ class EmailGuardrailsEvalTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             harness.validate(records + [records[0]], cases, 3)
-        self.assertEqual(harness.isolated_command(Path("runner"))[:3], ["unshare", "--net", "--"])
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            runner = workspace.parent / "approved-runner"
+            runner.write_text("#!/bin/sh\n")
+            runner.chmod(0o755)
+            self.addCleanup(runner.unlink)
+            marker = ROOT / "undeclared-checkout-artifact.txt"
+            marker.write_text("must not enter the harness mount")
+            self.addCleanup(marker.unlink)
+            harness.prepare_workspace(workspace, runner, "enabled")
+
+            self.assertFalse((workspace / marker.name).exists())
+            command = harness.isolated_command(workspace, "approved-harness:latest")
+
+        self.assertIn("--network", command)
+        self.assertIn("none", command)
+        self.assertTrue(any(str(workspace) in argument for argument in command))
+        self.assertFalse(any(str(ROOT) in argument for argument in command))

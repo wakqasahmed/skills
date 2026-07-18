@@ -23,9 +23,11 @@ jobs:
       - name: Run repository-controlled isolated harness
         env:
           EMAIL_GUARDRAILS_HARNESS: ${{ vars.EMAIL_GUARDRAILS_HARNESS }}
+          EMAIL_GUARDRAILS_HARNESS_IMAGE: ${{ vars.EMAIL_GUARDRAILS_HARNESS_IMAGE }}
         run: |
           test -n "$EMAIL_GUARDRAILS_HARNESS"
-          python3 skills/email-marketing/00-email-marketing-guardrails/eval/run_harness.py --runner "$EMAIL_GUARDRAILS_HARNESS" --trials '${{ inputs.trials }}' --output email-guardrails-harness.json
+          test -n "$EMAIL_GUARDRAILS_HARNESS_IMAGE"
+          python3 skills/email-marketing/00-email-marketing-guardrails/eval/run_harness.py --runner "$EMAIL_GUARDRAILS_HARNESS" --image "$EMAIL_GUARDRAILS_HARNESS_IMAGE" --trials '${{ inputs.trials }}' --output email-guardrails-harness.json
       - uses: actions/upload-artifact@v4
         with:
           name: email-guardrails-harness

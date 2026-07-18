@@ -29,13 +29,27 @@ def validate(records: list[dict], cases: list[dict], trials: int) -> dict:
     return {"enabled_pass_rate": enabled_passes / len(enabled), "disabled_pass_rate": disabled_passes / (len(records) - len(enabled)), "delta": (enabled_passes - disabled_passes) / len(enabled)}
 
 
-def isolated_command(runner: Path) -> list[str]:
-    return ["unshare", "--net", "--", str(runner)]
+def prepare_workspace(workspace: Path, runner: Path, condition: str) -> None:
+    shutil.copy2(FIXTURES, workspace / "cases.json")
+    shutil.copy2(runner, workspace / "runner")
+    (workspace / "runner").chmod(0o755)
+    if condition == "enabled":
+        shutil.copy2(EVAL.parent / "SKILL.md", workspace / "SKILL.md")
+
+
+def isolated_command(workspace: Path, image: str) -> list[str]:
+    return [
+        "docker", "run", "--rm", "--network", "none", "--read-only",
+        "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
+        "--mount", f"type=bind,source={workspace},target=/workspace,readonly",
+        "--workdir", "/workspace", image, "/workspace/runner",
+    ]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", type=Path, required=True)
+    parser.add_argument("--image", required=True)
     parser.add_argument("--trials", type=int, choices=range(3, 7), default=3)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -48,10 +62,8 @@ def main() -> int:
         for trial in range(args.trials):
             with tempfile.TemporaryDirectory() as directory:
                 workspace = Path(directory)
-                shutil.copy2(FIXTURES, workspace / "cases.json")
-                if condition == "enabled":
-                    shutil.copy2(EVAL.parent / "SKILL.md", workspace / "SKILL.md")
-                result = subprocess.run(isolated_command(runner), cwd=workspace, text=True, capture_output=True, env={"PATH": os.environ["PATH"], "HOME": str(workspace / "home"), "HARNESS_WORKSPACE": str(workspace), "HARNESS_CONDITION": condition, "HARNESS_TRIAL": str(trial)}, check=True)
+                prepare_workspace(workspace, runner, condition)
+                result = subprocess.run(isolated_command(workspace, args.image), text=True, capture_output=True, env={"PATH": os.environ["PATH"], "HOME": "/nonexistent", "HARNESS_WORKSPACE": "/workspace", "HARNESS_CONDITION": condition, "HARNESS_TRIAL": str(trial)}, check=True)
                 records.extend(json.loads(result.stdout))
     summary = validate(records, cases, args.trials)
     if summary["enabled_pass_rate"] < .8 or summary["delta"] <= 0:
