@@ -10,6 +10,14 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = REPOSITORY_ROOT / "scripts" / "validate-plugin.py"
 REPOSITORY_OWNER = "wakqasahmed/"
+TAXONOMY = {
+    "Agentic Commerce": {"agentic-commerce"},
+    "AI Visibility": {"ai-visibility"},
+    "Email Marketing": {"email-marketing"},
+    "Engineering Workflow": {"engineering"},
+    "PHP/Laravel/Filament": {"php", "laravel", "filament"},
+    "Productivity/Product": {"productivity", "product"},
+}
 RETIRED_REPOSITORIES = tuple(
     REPOSITORY_OWNER + name
     for name in (
@@ -29,6 +37,21 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertIn(
             "skills.sh does not support repository-defined marketplace groups.",
             readme,
+        )
+
+    def test_readme_uses_the_required_category_taxonomy(self) -> None:
+        readme = (REPOSITORY_ROOT / "README.md").read_text()
+
+        self.assertEqual(
+            re.findall(r"^### (.+)$", readme, flags=re.MULTILINE),
+            [
+                "Agentic Commerce",
+                "AI Visibility",
+                "Email Marketing",
+                "Engineering Workflow",
+                "PHP/Laravel/Filament",
+                "Productivity/Product",
+            ],
         )
 
     def test_open_code_review_workflow_contract(self) -> None:
@@ -69,10 +92,17 @@ class ValidatePluginTest(unittest.TestCase):
             categories.setdefault(category, []).append(skill)
 
         navigation = []
-        for category, skills in sorted(categories.items()):
-            navigation.append(f"### [{category.title()}](skills/{category}/)")
+        for category, folders in TAXONOMY.items():
+            skills = [
+                (folder, skill)
+                for folder in folders
+                for skill in categories.get(folder, [])
+            ]
+            if not skills:
+                continue
+            navigation.append(f"### {category}")
             navigation.extend(
-                f"- [{skill}](skills/{category}/{skill}/)" for skill in skills
+                f"- [{skill}](skills/{folder}/{skill}/)" for folder, skill in skills
             )
 
         (root / "README.md").write_text(
@@ -90,14 +120,21 @@ class ValidatePluginTest(unittest.TestCase):
         shutil.copy2(VALIDATOR, root / "scripts" / "validate-plugin.py")
         (root / ".claude-plugin").mkdir()
         skill_paths = [
-            "skills/example/example-skill",
-            "skills/other/other-skill",
+            "skills/ai-visibility/ai-visibility-skill",
+            "skills/agentic-commerce/agentic-commerce-skill",
+            "skills/email-marketing/email-marketing-skill",
+            "skills/engineering/engineering-skill",
+            "skills/php/php-skill",
+            "skills/laravel/laravel-skill",
+            "skills/filament/filament-skill",
+            "skills/product/product-skill",
+            "skills/productivity/productivity-skill",
         ]
         (root / ".claude-plugin" / "plugin.json").write_text(json.dumps({"skills": skill_paths}))
-        (root / "skills" / "example" / "example-skill").mkdir(parents=True)
-        (root / "skills" / "example" / "example-skill" / "SKILL.md").write_text("# Example\n")
-        (root / "skills" / "other" / "other-skill").mkdir(parents=True)
-        (root / "skills" / "other" / "other-skill" / "SKILL.md").write_text("# Other\n")
+        for skill_path in skill_paths:
+            skill_directory = root / skill_path
+            skill_directory.mkdir(parents=True)
+            (skill_directory / "SKILL.md").write_text("# Example\n")
         self.write_readme(root, skill_paths)
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
         subprocess.run(["git", "add", "."], cwd=root, check=True)
@@ -118,7 +155,7 @@ class ValidatePluginTest(unittest.TestCase):
 
     def test_rejects_retired_repositories_outside_the_readme(self) -> None:
         root = self.make_repository()
-        retired_reference = root / "skills" / "example" / "reference.md"
+        retired_reference = root / "skills" / "ai-visibility" / "reference.md"
         retired_reference.write_text("\n".join(RETIRED_REPOSITORIES))
         subprocess.run(["git", "add", str(retired_reference.relative_to(root))], cwd=root, check=True)
 
@@ -126,7 +163,7 @@ class ValidatePluginTest(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("former source repos", result.stderr)
-        self.assertIn("skills/example/reference.md", result.stderr)
+        self.assertIn("skills/ai-visibility/reference.md", result.stderr)
         for repository in RETIRED_REPOSITORIES:
             self.assertIn(repository, result.stderr)
 
@@ -161,11 +198,11 @@ class ValidatePluginTest(unittest.TestCase):
         readme = root / "README.md"
         readme.write_text(
             readme.read_text().replace(
-                "- [other-skill](skills/other/other-skill/)\n", ""
+                "- [productivity-skill](skills/productivity/productivity-skill/)\n", ""
             ).replace(
-                "- [example-skill](skills/example/example-skill/)\n",
-                "- [example-skill](skills/example/example-skill/)\n"
-                "- [example-skill](skills/example/example-skill/)\n",
+                "- [ai-visibility-skill](skills/ai-visibility/ai-visibility-skill/)\n",
+                "- [ai-visibility-skill](skills/ai-visibility/ai-visibility-skill/)\n"
+                "- [ai-visibility-skill](skills/ai-visibility/ai-visibility-skill/)\n",
             )
         )
         subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
@@ -174,3 +211,19 @@ class ValidatePluginTest(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("README skill navigation", result.stderr)
+
+    def test_rejects_skills_under_the_wrong_taxonomy_category(self) -> None:
+        root = self.make_repository()
+        readme = root / "README.md"
+        engineering_skill = "- [engineering-skill](skills/engineering/engineering-skill/)\n"
+        readme.write_text(
+            readme.read_text()
+            .replace(f"### Engineering Workflow\n{engineering_skill}", "### Engineering Workflow\n")
+            .replace("### AI Visibility\n", f"### AI Visibility\n{engineering_skill}")
+        )
+        subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
+
+        result = self.validate(root)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("taxonomy category", result.stderr)

@@ -14,7 +14,7 @@ The installer discovers the complete catalogue. Automated agent installs select 
 
 skills.sh does not support repository-defined marketplace groups. Use this category-first catalogue to choose a relevant skill, then keep the canonical installer above for the complete set.
 
-### [Agentic Commerce](skills/agentic-commerce/)
+### Agentic Commerce
 
 - [Agent Readiness](skills/agentic-commerce/agent-readiness/)
 - [Commerce Protocol Readiness](skills/agentic-commerce/commerce-protocol-readiness/)
@@ -27,7 +27,7 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [SEO, AEO, and GEO Audit](skills/agentic-commerce/seo-aeo-geo-audit/)
 - [Skills Marketplace Readiness](skills/agentic-commerce/skills-marketplace-readiness/)
 
-### [AI Visibility](skills/ai-visibility/)
+### AI Visibility
 
 - [AI Search Remediation Plan](skills/ai-visibility/ai-search-remediation-plan/)
 - [AI Visibility Audit](skills/ai-visibility/ai-visibility-audit/)
@@ -38,7 +38,7 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [Schema Markup Audit](skills/ai-visibility/schema-markup-audit/)
 - [Sitemap Discovery Audit](skills/ai-visibility/sitemap-discovery-audit/)
 
-### [Email Marketing](skills/email-marketing/)
+### Email Marketing
 
 - [Email Marketing Guardrails](skills/email-marketing/00-email-marketing-guardrails/)
 - [Newsletter Editorial](skills/email-marketing/01-newsletter-editorial/)
@@ -63,7 +63,7 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [List Growth Signup Preferences](skills/email-marketing/20-list-growth-signup-preferences/)
 - [Deliverability Sender Operations](skills/email-marketing/21-deliverability-sender-operations/)
 
-### [Engineering](skills/engineering/)
+### Engineering Workflow
 
 - [AI Agent PR Metadata](skills/engineering/ai-agent-pr-metadata/)
 - [Changesets Release](skills/engineering/changesets-release/)
@@ -76,27 +76,21 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [Subagent Pipeline](skills/engineering/subagent-pipeline/)
 - [To PRD](skills/engineering/to-prd/)
 
-### [Filament](skills/filament/)
+### PHP/Laravel/Filament
 
-- [Filament Conventions](skills/filament/filament-conventions/)
-- [Filament Plugin First](skills/filament/filament-plugin-first/)
-- [Livewire Conventions](skills/filament/livewire-conventions/)
-
-### [Laravel](skills/laravel/)
+- [PHP Principles](skills/php/php-principles/)
 
 - [Laravel Conventions](skills/laravel/laravel-conventions/)
 - [Laravel Security](skills/laravel/laravel-security/)
 - [Laravel Testing](skills/laravel/laravel-testing/)
 
-### [PHP](skills/php/)
+- [Filament Conventions](skills/filament/filament-conventions/)
+- [Filament Plugin First](skills/filament/filament-plugin-first/)
+- [Livewire Conventions](skills/filament/livewire-conventions/)
 
-- [PHP Principles](skills/php/php-principles/)
-
-### [Product](skills/product/)
+### Productivity/Product
 
 - [Roast](skills/product/roast/)
-
-### [Productivity](skills/productivity/)
 
 - [Handover](skills/productivity/handover/)
 
