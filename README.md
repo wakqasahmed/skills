@@ -8,7 +8,7 @@ The canonical home for Wakqasahmed's public AI visibility, agentic commerce, eng
 npx skills@latest add wakqasahmed/skills
 ```
 
-Select the individual skills you need from this repository when the installer prompts you.
+The installer discovers the complete catalogue. Automated agent installs select all listed skills.
 
 ## Browse Skills
 
