@@ -16,14 +16,14 @@ HARNESS_VERSION = "1"
 
 
 def prepare_workspace(workspace: Path, runner: Path, case: dict, condition: str) -> None:
-    (workspace / "case.json").write_text(json.dumps(case))
+    (workspace / "case.json").write_text(json.dumps({"prompt": case["prompt"]}))
     shutil.copy2(runner, workspace / "runner")
     (workspace / "runner").chmod(0o755)
     if condition == "enabled":
         shutil.copy2(EVAL_DIR.parent / "SKILL.md", workspace / "SKILL.md")
 
 
-def isolated_command(workspace: Path, image: str, condition: str, trial: int) -> list[str]:
+def isolated_command(workspace: Path, image: str, condition: str, trial: int, model: str) -> list[str]:
     return [
         "docker", "run", "--rm", "--network", "none", "--read-only", "--cap-drop", "ALL",
         "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
@@ -31,8 +31,14 @@ def isolated_command(workspace: Path, image: str, condition: str, trial: int) ->
         "--env", "HARNESS_WORKSPACE=/workspace",
         "--env", f"HARNESS_CONDITION={condition}",
         "--env", f"HARNESS_TRIAL={trial}",
+        "--env", f"HARNESS_MODEL={model}",
         "--workdir", "/workspace", image, "/workspace/runner",
     ]
+
+
+def require_declared_model(record: dict, model: str) -> None:
+    if record.get("model") != model:
+        raise SystemExit("runner must record the declared model")
 
 
 def main() -> int:
@@ -59,7 +65,7 @@ def main() -> int:
                     workspace = Path(directory)
                     prepare_workspace(workspace, runner, case, condition)
                     result = subprocess.run(
-                        isolated_command(workspace, args.image, condition, trial),
+                        isolated_command(workspace, args.image, condition, trial, args.model),
                         text=True,
                         capture_output=True,
                         check=True,
@@ -68,6 +74,7 @@ def main() -> int:
                 record = json.loads(result.stdout)
                 if not isinstance(record, dict):
                     raise SystemExit("runner must emit one JSON object per case/trial")
+                require_declared_model(record, args.model)
                 records.append({
                     **record,
                     "case_id": case["id"],

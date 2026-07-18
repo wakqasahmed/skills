@@ -9,11 +9,13 @@ they are not held-out model outcomes and must not be used to tune the harness.
 
 `run_harness.py` is the gated outcome evaluator. It uses five independent
 trials for every held-out case in each condition: enabled receives only the
-case, repository-controlled runner, and this `SKILL.md`; disabled receives no
-skill. Every trial has a new temporary workspace, empty home, read-only root,
-no repository mount, no ambient credentials, and `--network none`. The runner
-must emit `skill_used`, `outcome`, and `safety_outcome`; the harness adds the
-case, condition, trial, declared model, and harness version.
+prompt, repository-controlled runner, and this `SKILL.md`; disabled receives
+no skill. Expected outcome and safety labels remain outside the container for
+validation. Every trial has a new temporary workspace, empty home, read-only
+root, no repository mount, no ambient credentials, and `--network none`. The
+runner receives `HARNESS_MODEL` and must emit it alongside `skill_used`,
+`outcome`, and `safety_outcome`; the harness rejects a mismatched model before
+adding case, condition, trial, and harness version.
 
 Run it only through the scheduled or manually gated workflow with an approved
 repository-controlled runner and digest-pinned image. The validator requires
