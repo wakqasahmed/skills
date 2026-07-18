@@ -11,6 +11,7 @@ FIELD_RE = re.compile(r"^(Disposition|Commit|Test|Issue|Reason):\s*(.+?)\s*$", r
 OCR_MARKER_RE = re.compile(r"<!--\s*ocr-", re.IGNORECASE)
 BLOCKING_RE = re.compile(r"\bblocking\s*:", re.IGNORECASE)
 ROLE_LABEL_RE = re.compile(r"^agent:(.+)-(low|medium|high)-(implementer|reviewer|fixer)$")
+AUTHORIZED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
 
 
 def ocr_findings(head_sha, review_comments):
@@ -23,19 +24,28 @@ def ocr_findings(head_sha, review_comments):
     ]
 
 
+def is_authorized_disposition(comment):
+    return comment.get("author_association") in AUTHORIZED_ASSOCIATIONS
+
+
 def dispositions_by_finding(issue_comments):
     dispositions = {}
+    unauthorized = set()
     for comment in issue_comments:
         body = comment.get("body", "")
         marker = DISPOSITION_RE.search(body)
         if not marker:
             continue
+        finding_id = int(marker.group(1))
+        if not is_authorized_disposition(comment):
+            unauthorized.add(finding_id)
+            continue
         fields = {key.lower(): value.strip() for key, value in FIELD_RE.findall(body)}
-        dispositions[int(marker.group(1))] = fields
-    return dispositions
+        dispositions[finding_id] = fields
+    return dispositions, unauthorized
 
 
-def disposition_error(finding_id, fields, blocking):
+def disposition_error(finding_id, fields, blocking, pr_commit_shas):
     disposition = fields.get("disposition")
     if disposition not in {"fixed", "deferred", "declined"}:
         return f"OCR finding {finding_id} on latest head is undispositioned"
@@ -43,6 +53,8 @@ def disposition_error(finding_id, fields, blocking):
         return f"Blocking OCR finding {finding_id} must be fixed"
     if disposition == "fixed" and not (fields.get("commit") and fields.get("test")):
         return f"Fixed OCR finding {finding_id} needs commit and test evidence"
+    if disposition == "fixed" and fields["commit"] not in pr_commit_shas:
+        return f"Fixed OCR finding {finding_id} needs a commit on this PR"
     if disposition == "deferred" and not fields.get("issue"):
         return f"Deferred OCR finding {finding_id} needs a linked issue"
     if disposition == "declined" and not fields.get("reason"):
@@ -50,15 +62,20 @@ def disposition_error(finding_id, fields, blocking):
     return None
 
 
-def validate_ocr_dispositions(head_sha, review_comments, issue_comments):
-    dispositions = dispositions_by_finding(issue_comments)
+def validate_ocr_dispositions(head_sha, review_comments, issue_comments, pr_commits=()):
+    dispositions, unauthorized = dispositions_by_finding(issue_comments)
+    pr_commit_shas = {commit["sha"] for commit in pr_commits}
     failures = []
     for finding in ocr_findings(head_sha, review_comments):
         finding_id = finding["id"]
+        if finding_id not in dispositions and finding_id in unauthorized:
+            failures.append(f"OCR finding {finding_id} has no authorized disposition")
+            continue
         failure = disposition_error(
             finding_id,
             dispositions.get(finding_id, {}),
             bool(BLOCKING_RE.search(finding.get("body", ""))),
+            pr_commit_shas,
         )
         if failure:
             failures.append(failure)
@@ -85,6 +102,7 @@ def main():
     parser.add_argument("--head-sha", required=True)
     parser.add_argument("--review-comments", required=True)
     parser.add_argument("--issue-comments", required=True)
+    parser.add_argument("--pr-commits", required=True)
     parser.add_argument("--new-agent-label", action="append", default=[])
     parser.add_argument("--resolved-model-id")
     args = parser.parse_args()
@@ -93,6 +111,7 @@ def main():
         args.head_sha,
         read_json(args.review_comments),
         read_json(args.issue_comments),
+        read_json(args.pr_commits),
     )
     failures.extend(validate_agent_labels(args.new_agent_label, args.resolved_model_id))
     if failures:

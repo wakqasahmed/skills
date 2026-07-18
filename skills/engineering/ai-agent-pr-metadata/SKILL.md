@@ -28,10 +28,14 @@ Historical `agent:*` labels are audit data. Never relabel or delete them. Audit 
 Before creating a new role label, validate the proposed exact label with the resolved runtime value. Do not pass an inferred alias as `--resolved-model-id`:
 
 ```bash
+gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/comments?per_page=100" > /tmp/ocr-review-comments.json
+gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" > /tmp/ocr-issue-comments.json
+gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" > /tmp/pr-commits.json
 python3 support/ai-engineering-workflow/scripts/verify-pr-governance.py \
   --head-sha "$GITHUB_SHA" \
   --review-comments /tmp/ocr-review-comments.json \
   --issue-comments /tmp/ocr-issue-comments.json \
+  --pr-commits /tmp/pr-commits.json \
   --resolved-model-id "$AI_AGENT_RESOLVED_MODEL_ID" \
   --new-agent-label "agent:${AI_AGENT_RESOLVED_MODEL_ID}-${AI_AGENT_EFFORT}-${AI_AGENT_ROLE}"
 ```
@@ -118,10 +122,12 @@ After the final push, wait for OCR and CI to settle. Fetch the latest-head OCR c
 gh pr checks "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --watch
 gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/comments" --paginate > /tmp/ocr-review-comments.json
 gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate > /tmp/ocr-issue-comments.json
+gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" > /tmp/pr-commits.json
 python3 support/ai-engineering-workflow/scripts/verify-pr-governance.py \
   --head-sha "$GITHUB_SHA" \
   --review-comments /tmp/ocr-review-comments.json \
-  --issue-comments /tmp/ocr-issue-comments.json
+  --issue-comments /tmp/ocr-issue-comments.json \
+  --pr-commits /tmp/pr-commits.json
 ```
 
 Every OCR inline comment on the latest head uses one PR comment with this exact record:
@@ -135,7 +141,9 @@ Issue: #123                     # required for deferred
 Reason: concise technical reason # required for declined
 ```
 
-The gate fails on an undispositioned latest-head OCR finding. `fixed` requires commit and test evidence; `deferred` requires a linked issue; `declined` requires a concise technical reason. A comment explicitly marked `Blocking:` must be `fixed`; use that marker only for correctness, security, data integrity, or acceptance-criteria findings. Style, wording, speculative defensive suggestions, and refactor preferences may be deferred or declined with a record, rather than generating bulk churn.
+Open Code Review emits latest-head inline findings as `github-actions[bot]` comments with an `<!-- ocr-... -->` marker. The gate fails on an undispositioned latest-head OCR finding. Only repository owners, members, or collaborators can record a disposition. `fixed` requires a commit on the PR and test evidence; `deferred` requires a linked issue; `declined` requires a concise technical reason. A comment explicitly marked `Blocking:` must be `fixed`; use that marker only for correctness, security, data integrity, or acceptance-criteria findings. Style, wording, speculative defensive suggestions, and refactor preferences may be deferred or declined with a record, rather than generating bulk churn.
+
+The `OCR disposition gate` workflow rechecks after Open Code Review completes and whenever a PR comment is created or edited. Protect the target branch by requiring its `OCR disposition gate` status context; do not rely on an agent manually running the command above.
 
 ## Verification
 

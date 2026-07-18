@@ -6,8 +6,9 @@
     {"id": 27, "commit_id": "latest", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-declined -->"}
   ],
   "issue_comments": [
-    {"body": "<!-- ocr-disposition:25 -->\nDisposition: fixed\nCommit: abc123\nTest: python3 -m unittest tests.test_pr_governance"},
-    {"body": "<!-- ocr-disposition:26 -->\nDisposition: deferred\nIssue: #107"},
-    {"body": "<!-- ocr-disposition:27 -->\nDisposition: declined\nReason: Existing validation proves the claimed failure impossible."}
-  ]
+    {"author_association": "MEMBER", "body": "<!-- ocr-disposition:25 -->\nDisposition: fixed\nCommit: abc123\nTest: python3 -m unittest tests.test_pr_governance"},
+    {"author_association": "MEMBER", "body": "<!-- ocr-disposition:26 -->\nDisposition: deferred\nIssue: #107"},
+    {"author_association": "MEMBER", "body": "<!-- ocr-disposition:27 -->\nDisposition: declined\nReason: Existing validation proves the claimed failure impossible."}
+  ],
+  "pr_commits": [{"sha": "abc123"}]
 }

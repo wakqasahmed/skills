@@ -1,0 +1,73 @@
+name: OCR disposition gate
+
+on:
+  workflow_run:
+    workflows: [Open Code Review]
+    types: [completed]
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  gate:
+    if: >-
+      github.event_name == 'workflow_run' ||
+      github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify latest OCR findings are dispositioned
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_PR_NUMBER: ${{ github.event.issue.number }}
+          OCR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          OCR_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          OCR_PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          if [ "$EVENT_NAME" = workflow_run ]; then
+            if [ "$OCR_CONCLUSION" != success ] || [ -z "$OCR_PR_NUMBER" ]; then
+              exit 0
+            fi
+            PR_NUMBER="$OCR_PR_NUMBER"
+          else
+            PR_NUMBER="$ISSUE_PR_NUMBER"
+          fi
+
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" > /tmp/pr.json
+          HEAD_SHA="$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" --jq .head.sha)"
+          if [ "$EVENT_NAME" = workflow_run ] && [ "$OCR_HEAD_SHA" != "$HEAD_SHA" ]; then
+            exit 0
+          fi
+
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/comments?per_page=100" > /tmp/ocr-review-comments.json
+          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" > /tmp/ocr-issue-comments.json
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" > /tmp/pr-commits.json
+
+          set +e
+          python3 support/ai-engineering-workflow/scripts/verify-pr-governance.py \
+            --head-sha "$HEAD_SHA" \
+            --review-comments /tmp/ocr-review-comments.json \
+            --issue-comments /tmp/ocr-issue-comments.json \
+            --pr-commits /tmp/pr-commits.json
+          gate_exit=$?
+          set -e
+
+          if [ "$gate_exit" -eq 0 ]; then
+            state=success
+            description='Latest OCR findings are dispositioned'
+          else
+            state=failure
+            description='OCR finding needs an authorized disposition'
+          fi
+          gh api --method POST "repos/$REPOSITORY/statuses/$HEAD_SHA" \
+            -f state="$state" \
+            -f context='OCR disposition gate' \
+            -f description="$description"
+          exit "$gate_exit"
