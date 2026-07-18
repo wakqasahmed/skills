@@ -45,6 +45,7 @@ python3 support/email-marketing/scripts/validate-orchestration.py
 python3 support/email-marketing/scripts/validate-list-growth.py
 python3 support/email-marketing/scripts/validate-deliverability.py
 bash support/ai-engineering-workflow/scripts/test-ai-agent-pr-metadata.sh
+python3 -m unittest tests/test_pr_governance.py
 bash support/ai-engineering-workflow/scripts/test-install-user.sh
 ```
 

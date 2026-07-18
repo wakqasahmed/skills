@@ -1,0 +1,9 @@
+{
+  "head_sha": "latest",
+  "review_comments": [
+    {"id": 31, "commit_id": "latest", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-blocking -->\nBlocking: acceptance criterion is not met."}
+  ],
+  "issue_comments": [
+    {"body": "<!-- ocr-disposition:31 -->\nDisposition: declined\nReason: The requested behavior is outside this issue."}
+  ]
+}
