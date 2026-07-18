@@ -1,0 +1,37 @@
+name: Commerce protocol behavior eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved credentialed harness in an isolated workspace
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  behavior-eval:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check deterministic contract
+        run: python3 skills/agentic-commerce/commerce-protocol-readiness/eval/run.py
+      - name: Require an approved isolated harness
+        env:
+          COMMERCE_PROTOCOL_EVAL_HARNESS: ${{ vars.COMMERCE_PROTOCOL_EVAL_HARNESS }}
+          COMMERCE_PROTOCOL_EVAL_CASES: skills/agentic-commerce/commerce-protocol-readiness/eval/held-out-cases.json
+          COMMERCE_PROTOCOL_EVAL_RESULTS: commerce-protocol-eval-results.json
+        run: |
+          test -n "$COMMERCE_PROTOCOL_EVAL_HARNESS"
+          "$COMMERCE_PROTOCOL_EVAL_HARNESS"
+          python3 skills/agentic-commerce/commerce-protocol-readiness/eval/validate-harness-results.py --results "$COMMERCE_PROTOCOL_EVAL_RESULTS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: commerce-protocol-behavior-eval-${{ github.run_id }}
+          path: commerce-protocol-eval-results.json
+          if-no-files-found: error
