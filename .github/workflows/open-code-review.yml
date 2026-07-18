@@ -1,0 +1,57 @@
+name: Open Code Review
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  review:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.body == '/ocr-review' &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read pull request metadata
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }} \
+            --jq '{ref:.head.ref,repository:.head.repo.full_name}' > pr.json
+          test "$(jq -r .repository pr.json)" = "${{ github.repository }}"
+          echo "ref=$(jq -r .ref pr.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install -g @alibaba-group/open-code-review
+
+      - name: Review
+        env:
+          OCR_LLM_URL: ${{ secrets.OCR_LLM_URL }}
+          OCR_LLM_TOKEN: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          OCR_LLM_MODEL: ${{ secrets.OCR_LLM_MODEL }}
+          OCR_USE_ANTHROPIC: ${{ secrets.OCR_USE_ANTHROPIC }}
+        run: |
+          ocr review --from "origin/${{ github.event.repository.default_branch }}" --to HEAD --format json --audience agent --concurrency 1 --max-tools 3 > ocr-result.json
+          jq -r .summary ocr-result.json > ocr-summary.md
+
+      - name: Post review summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body-file ocr-summary.md

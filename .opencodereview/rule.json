@@ -1,0 +1,10 @@
+{
+  "exclude": [
+    ".agents/**",
+    ".claude-plugin/**",
+    "support/**",
+    "**/*.md",
+    "**/*.json",
+    "**/*.lock"
+  ]
+}
