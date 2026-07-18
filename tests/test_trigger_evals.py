@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -27,7 +28,36 @@ class TriggerEvalTest(unittest.TestCase):
         for case in data["cases"]:
             self.assertTrue(case["positive"])
             self.assertTrue(case["negative"])
-            self.assertFalse(load_runner().matches(case["negative"], case["terms"]), case["skill"])
+            self.assertIn(case["split"], {"train", "validation"})
+
+    def test_train_and_validation_use_disjoint_complete_examples(self):
+        runner = load_runner()
+        cases = json.loads(CASES.read_text())["cases"]
+        train = runner.cases_for_split(cases, "train")
+        validation = runner.cases_for_split(cases, "validation")
+
+        self.assertTrue(train)
+        self.assertTrue(validation)
+        self.assertTrue(all(case["split"] == "train" for case in train))
+        self.assertTrue(all(case["split"] == "validation" for case in validation))
+        self.assertTrue({case["skill"] for case in train}.isdisjoint({case["skill"] for case in validation}))
+        self.assertEqual(
+            {(case["skill"], prompt) for case in train for prompt in (case["positive"], case["negative"])},
+            {(case["skill"], prompt) for case in cases if case["split"] == "train" for prompt in (case["positive"], case["negative"])},
+        )
+
+    def test_routing_uses_the_checked_in_skill_description(self):
+        runner = load_runner()
+        case = next(case for case in json.loads(CASES.read_text())["cases"] if case["skill"] == "ai-visibility/ai-visibility-audit")
+        description = runner.skill_description(case["skill"], ROOT)
+        self.assertTrue(runner.matches(case["positive"], description))
+
+        with tempfile.TemporaryDirectory() as directory:
+            fixture_root = Path(directory)
+            skill_path = fixture_root / "skills" / case["skill"] / "SKILL.md"
+            skill_path.parent.mkdir(parents=True)
+            skill_path.write_text("---\nname: unrelated\ndescription: Schedule a garden party.\n---\n")
+            self.assertFalse(runner.matches(case["positive"], runner.skill_description(case["skill"], fixture_root)))
 
     def test_runner_passes_train_and_validation_without_network(self):
         for split in ("train", "validation"):

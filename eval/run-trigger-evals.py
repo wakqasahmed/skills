@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Run deterministic should-trigger routing checks without network access."""
+"""Evaluate skill-description routing with a deterministic offline scorer."""
 
 import argparse
 import json
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -10,36 +11,55 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CASES = ROOT / "eval" / "trigger-cases.json"
+STOP_WORDS = frozenset({
+    "a", "an", "and", "are", "as", "at", "be", "before", "by", "can", "for", "from",
+    "after", "form", "in", "into", "is", "it", "of", "on", "or", "our", "run", "that", "the", "this", "to", "use", "when",
+    "with", "whether", "your",
+})
 
 
-def matches(text: str, terms: list[str]) -> bool:
-    normalized = text.casefold()
-    return all(term.casefold() in normalized for term in terms)
+def skill_description(skill: str, root: Path = ROOT) -> str:
+    content = (root / "skills" / skill / "SKILL.md").read_text()
+    match = re.search(r"^description:\s*(.+)$", content, re.MULTILINE)
+    if match is None:
+        raise ValueError(f"missing description for {skill}")
+    return match.group(1)
+
+
+def terms(text: str) -> set[str]:
+    return {
+        term
+        for term in re.findall(r"[a-z0-9]+", text.casefold())
+        if len(term) > 2 and term not in STOP_WORDS
+    }
+
+
+def matches(prompt: str, description: str) -> bool:
+    """Require two meaningful prompt words from the real SKILL.md description."""
+    return len(terms(prompt) & terms(description)) >= 2
 
 
 def discovered_skills(root: Path) -> set[str]:
     return {str(path.parent.relative_to(root / "skills")) for path in (root / "skills").glob("*/*/SKILL.md")}
 
 
-def evaluate(cases: list[dict], split: str) -> dict[str, dict[str, int]]:
+def cases_for_split(cases: list[dict], split: str) -> list[dict]:
+    return cases if split == "all" else [case for case in cases if case["split"] == split]
+
+
+def evaluate(cases: list[dict], split: str, root: Path = ROOT) -> dict[str, dict[str, int]]:
     metrics: dict[str, dict[str, int]] = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
-    for index, case in enumerate(cases):
-        category = case["category"]
-        positive_split = "train" if index % 2 == 0 else "validation"
-        negative_split = "validation" if positive_split == "train" else "train"
-        for expected, text, case_split in (
-            (True, case["positive"], positive_split),
-            (False, case["negative"], negative_split),
-        ):
-            if split != "all" and split != case_split:
-                continue
-            actual = matches(text, case["terms"])
+    for case in cases_for_split(cases, split):
+        description = skill_description(case["skill"], root)
+        for expected, prompt in ((True, case["positive"]), (False, case["negative"])):
+            actual = matches(prompt, description)
+            counts = metrics[case["category"]]
             if actual and expected:
-                metrics[category]["tp"] += 1
+                counts["tp"] += 1
             elif actual:
-                metrics[category]["fp"] += 1
+                counts["fp"] += 1
             elif expected:
-                metrics[category]["fn"] += 1
+                counts["fn"] += 1
     return metrics
 
 
@@ -53,18 +73,16 @@ def main() -> int:
     expected = discovered_skills(ROOT)
     actual = {case["skill"] for case in cases}
     if actual != expected:
-        missing = sorted(expected - actual)
-        stale = sorted(actual - expected)
-        print(f"coverage mismatch; missing={missing}; stale={stale}", file=sys.stderr)
+        print(f"coverage mismatch; missing={sorted(expected - actual)}; stale={sorted(actual - expected)}", file=sys.stderr)
         return 1
-    if len(cases) != len(actual):
-        print("each skill must have exactly one trigger case definition", file=sys.stderr)
+    if len(cases) != len(actual) or {case.get("split") for case in cases} != {"train", "validation"}:
+        print("each skill needs one case assigned to either train or validation", file=sys.stderr)
         return 1
 
     thresholds = data["minimum_metrics"]
     metrics = evaluate(cases, arguments.split)
     failed = False
-    for category in sorted(metrics):
+    for category in sorted(thresholds):
         counts = metrics[category]
         precision = counts["tp"] / (counts["tp"] + counts["fp"]) if counts["tp"] + counts["fp"] else 0
         recall = counts["tp"] / (counts["tp"] + counts["fn"]) if counts["tp"] + counts["fn"] else 0
