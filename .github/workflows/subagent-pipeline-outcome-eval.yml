@@ -1,0 +1,51 @@
+name: Subagent pipeline outcome eval
+
+on:
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated harness
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: subagent-pipeline-outcome-eval
+  cancel-in-progress: true
+
+jobs:
+  deterministic-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash skills/engineering/subagent-pipeline/eval/run-eval.sh --dry-run
+
+  outcome-harness:
+    if: github.event_name == 'schedule' || inputs.run_harness
+    needs: deterministic-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run approved isolated harness
+        env:
+          SUBAGENT_PIPELINE_EVAL_RUNNER: ${{ vars.SUBAGENT_PIPELINE_EVAL_RUNNER }}
+          SUBAGENT_PIPELINE_EVAL_IMAGE: ${{ vars.SUBAGENT_PIPELINE_EVAL_IMAGE }}
+          SUBAGENT_PIPELINE_EVAL_MODEL: ${{ vars.SUBAGENT_PIPELINE_EVAL_MODEL }}
+        run: |
+          test -n "$SUBAGENT_PIPELINE_EVAL_RUNNER"
+          test -n "$SUBAGENT_PIPELINE_EVAL_IMAGE"
+          test -n "$SUBAGENT_PIPELINE_EVAL_MODEL"
+          python3 skills/engineering/subagent-pipeline/eval/run_harness.py --runner "$SUBAGENT_PIPELINE_EVAL_RUNNER" --image "$SUBAGENT_PIPELINE_EVAL_IMAGE" --model "$SUBAGENT_PIPELINE_EVAL_MODEL" --output subagent-pipeline-outcome-results.json
+          python3 skills/engineering/subagent-pipeline/eval/validate-harness-results.py --results subagent-pipeline-outcome-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: subagent-pipeline-outcome-eval-${{ github.run_id }}
+          path: subagent-pipeline-outcome-results.json
+          if-no-files-found: error
