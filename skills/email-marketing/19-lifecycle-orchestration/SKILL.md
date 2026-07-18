@@ -68,7 +68,7 @@ Return all of the following:
 4. Campaign calendar: date/time and timezone, campaign/flow, segment, channel, expected eligible volume, cap budget, holdout, owner, dependencies, and collision notes. [BRAZE-STRAT-01][BRAZE-HOLIDAY-01]
 5. Monitoring and exception report: sends/reservations by contact and flow, cap and quiet-period blocks, collisions won/lost, duplicate attempts, stale-event drops, purchase suppressions, holdout leakage, service latency, delivery/bounce/complaint metrics, and alerts with owners. [AWS-SES-MON-01][GMAIL-03][BRAZE-METRIC-01]
 6. One worked contact trace showing the ordered input snapshot, every rejected candidate and reason code, the winning decision, and the next reevaluation trigger. [HUB-WF-01][BRAZE-TRIG-01]
-7. A final `SEND`, `HOLD`, or `BLOCK` decision for policy readiness and a source list containing every citation ID used. [LIT-QA-01][GMAIL-01]
+7. A final `SEND`, `HOLD`, or `BLOCK` decision for policy readiness, including the blocking or hold reason when not send-ready, and a source list containing every citation ID used. [LIT-QA-01][GMAIL-01]
 
 ## Agent restrictions
 - Never invent consent, caps, quiet hours, preferences, event timestamps, ownership, purchase windows, or holdout assignments; unresolved hard-gate data is `BLOCK` and unresolved operational policy is `HOLD`. [ICO-02][GMAIL-01][BRAZE-STRAT-01]
