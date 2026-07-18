@@ -17,5 +17,6 @@ jobs:
       - run: python3 -m unittest tests/test_validate_plugin.py
       - run: python3 scripts/validate-plugin.py
       - run: bash scripts/run-behavior-evals.sh
+      - run: python3 -m unittest tests/test_agent_readiness_eval.py
       - run: python3 -m unittest tests/test_trigger_evals.py
       - run: python3 eval/run-trigger-evals.py --split validation
