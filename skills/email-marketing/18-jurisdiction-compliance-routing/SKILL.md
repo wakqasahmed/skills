@@ -29,7 +29,7 @@ Return all of the following before campaign-specific drafting:
 3. Selected routing path: US, UK, EEA, Canada, or unknown/conflicting, based on sender and recipient facts.
 4. Applicable operational checks and any required counsel review.
 5. Recipient groups excluded or separated from the send.
-6. Final `SEND`, `HOLD`, or `BLOCK` decision, with the unresolved fact or counsel question where applicable.
+6. Final `SEND`, `HOLD`, or `BLOCK` decision, with the unresolved fact, failed gate, or counsel question where applicable.
 7. A source list containing every citation ID used.
 
 ## Agent restrictions

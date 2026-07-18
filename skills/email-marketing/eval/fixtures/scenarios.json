@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "campaigns": [
+    {
+      "name": "verified-marketing-send",
+      "input": {"permission": true, "jurisdiction": "US", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
+      "candidate": {"decision": "SEND", "reason": "all applicable gates pass"},
+      "expected_valid": true
+    },
+    {
+      "name": "scraped-list-must-block",
+      "input": {"permission": false, "jurisdiction": "US", "legal_basis_verified": false, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
+      "candidate": {"decision": "SEND", "reason": "address was supplied"},
+      "expected_valid": false
+    },
+    {
+      "name": "unverified-canadian-exemption-must-block",
+      "input": {"permission": true, "jurisdiction": "Canada", "legal_basis_verified": false, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
+      "candidate": {"decision": "HOLD", "reason": "check the exemption later"},
+      "expected_valid": false
+    },
+    {
+      "name": "unknown-jurisdiction-can-hold-for-fact",
+      "input": {"permission": true, "jurisdiction": "unknown", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true, "jurisdiction_fact_collectable": true},
+      "candidate": {"decision": "HOLD", "reason": "recipient jurisdiction is unknown"},
+      "expected_valid": true
+    },
+    {
+      "name": "suppressed-recipient-must-block",
+      "input": {"permission": true, "jurisdiction": "UK", "legal_basis_verified": true, "suppressed": true, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
+      "candidate": {"decision": "SEND", "reason": "the campaign is otherwise complete"},
+      "expected_valid": false
+    },
+    {
+      "name": "incomplete-qa-holds-not-sends",
+      "input": {"permission": true, "jurisdiction": "EEA", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": false},
+      "candidate": {"decision": "HOLD", "reason": "pre-send QA is incomplete"},
+      "expected_valid": true
+    }
+  ],
+  "orchestration": [
+    {
+      "name": "unsubscribed-marketing-with-service-receipt",
+      "input": {"marketing_suppressed": true, "service_verified": true, "promotional_content": false, "precedence_policy": true, "cap_available": true},
+      "candidate": {"marketing": "BLOCK: UNSUBSCRIBED", "service": "SEND"},
+      "expected_valid": true
+    },
+    {
+      "name": "service-label-cannot-bypass-marketing",
+      "input": {"marketing_suppressed": true, "service_verified": false, "promotional_content": true, "precedence_policy": true, "cap_available": true},
+      "candidate": {"marketing": "SEND", "service": "SEND"},
+      "expected_valid": false
+    },
+    {
+      "name": "missing-precedence-holds-conflict",
+      "input": {"marketing_suppressed": false, "service_verified": false, "promotional_content": false, "precedence_policy": false, "cap_available": true},
+      "candidate": {"marketing": "HOLD: PRECEDENCE_POLICY_MISSING", "service": "NOT_APPLICABLE"},
+      "expected_valid": true
+    },
+    {
+      "name": "exhausted-cap-defers-marketing",
+      "input": {"marketing_suppressed": false, "service_verified": false, "promotional_content": false, "precedence_policy": true, "cap_available": false},
+      "candidate": {"marketing": "DEFER: CAP_REACHED", "service": "NOT_APPLICABLE"},
+      "expected_valid": true
+    }
+  ]
+}

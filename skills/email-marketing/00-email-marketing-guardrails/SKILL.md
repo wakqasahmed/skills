@@ -77,6 +77,6 @@ Apply these gates before every campaign-specific `SKILL.md`. A campaign that fai
 - Don't disguise marketing as transactional or service mail. [BRAZE-TRANS-01][FTC-01]
 
 ## Decision rule
-- Return `BLOCK` when permission, legality, authentication, suppression, identity, or factual claims cannot be verified. [FTC-01][ICO-02][GMAIL-01]
-- Return `HOLD` when the campaign is lawful but data, tracking, QA, inventory, landing page, or approvals are incomplete. [LIT-QA-01][LIT-TEST-01]
-- Return `SEND` only when every applicable gate passes and the campaign has a measurable hypothesis. [BRAZE-STRAT-01][BRAZE-METRIC-01]
+- Return `BLOCK` with the failed hard-gate reason when permission, legality, authentication, suppression, identity, or factual claims cannot be verified. [FTC-01][ICO-02][GMAIL-01]
+- Return `HOLD` with the missing fact or check when the campaign is lawful but data, tracking, QA, inventory, landing page, or approvals are incomplete. [LIT-QA-01][LIT-TEST-01]
+- Return `SEND` only when every applicable gate passes and the campaign has a measurable hypothesis; state that all applicable gates passed. [BRAZE-STRAT-01][BRAZE-METRIC-01]

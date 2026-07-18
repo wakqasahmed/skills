@@ -16,3 +16,4 @@ jobs:
           python-version: "3.x"
       - run: python3 -m unittest tests/test_validate_plugin.py
       - run: python3 scripts/validate-plugin.py
+      - run: bash scripts/run-behavior-evals.sh
