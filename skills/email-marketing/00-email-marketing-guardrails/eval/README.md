@@ -4,4 +4,4 @@
 
 ## Gated harness seam
 
-No live agent harness is bundled. A scheduled or manually dispatched harness must run each fixture in a clean disposable workspace with network and credentials disabled, once with this skill present and once absent. It must emit one JSON outcome per trial with `name`, `condition`, `decision`, `reason_code`, and `required_actions`; run 3--6 trials per case and retain the report. Gate promotion on at least an 80% pass rate and a positive skill-enabled versus disabled outcome delta. Do not run that harness in pull-request CI.
+The manually dispatched harness runs `run_harness.py` in a new temporary workspace per condition/trial, copies only the fixture and (when enabled) `SKILL.md`, clears credentials, and retains its JSON report as a workflow artifact. The supplied runner must emit JSON records with `name`, `condition`, `trial`, and `outcome`. It runs 3--6 trials per case, requires an enabled pass rate of at least 80% and a positive enabled-versus-disabled delta. Do not run that harness in pull-request CI.
