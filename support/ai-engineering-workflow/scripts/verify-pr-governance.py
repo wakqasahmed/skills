@@ -12,6 +12,8 @@ OCR_MARKER_RE = re.compile(r"<!--\s*ocr-", re.IGNORECASE)
 BLOCKING_RE = re.compile(r"\bblocking\s*:", re.IGNORECASE)
 ROLE_LABEL_RE = re.compile(r"^agent:(.+)-(low|medium|high)-(implementer|reviewer|fixer)$")
 AUTHORIZED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
+RESOLVED_MODEL_RE = re.compile(r"^\s*- Resolved model ID:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+METADATA_LIMITATION_RE = re.compile(r"^\s*- Metadata limitation:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 
 
 def ocr_findings(head_sha, review_comments):
@@ -93,6 +95,26 @@ def validate_agent_labels(labels, resolved_model_id=None):
     return failures
 
 
+def validate_pr_agent_metadata(pr):
+    labels = [label["name"] for label in pr.get("labels", [])]
+    body = pr.get("body") or ""
+    model_match = RESOLVED_MODEL_RE.search(body)
+    limitation_match = METADATA_LIMITATION_RE.search(body)
+
+    if not model_match:
+        return ["PR is missing the resolved model ID record"]
+
+    resolved_model_id = model_match.group(1)
+    if resolved_model_id.lower() == "unavailable":
+        if not limitation_match or limitation_match.group(1).lower() in {"n/a", "unavailable"}:
+            return ["PR with unavailable model ID needs a metadata limitation"]
+        return validate_agent_labels(labels)
+
+    if not limitation_match or limitation_match.group(1).lower() != "n/a":
+        return ["PR with a resolved model ID must record Metadata limitation: N/A"]
+    return validate_agent_labels(labels, resolved_model_id)
+
+
 def read_json(path):
     return json.loads(Path(path).read_text())
 
@@ -103,6 +125,7 @@ def main():
     parser.add_argument("--review-comments", required=True)
     parser.add_argument("--issue-comments", required=True)
     parser.add_argument("--pr-commits", required=True)
+    parser.add_argument("--pr", required=True)
     parser.add_argument("--new-agent-label", action="append", default=[])
     parser.add_argument("--resolved-model-id")
     args = parser.parse_args()
@@ -114,6 +137,7 @@ def main():
         read_json(args.pr_commits),
     )
     failures.extend(validate_agent_labels(args.new_agent_label, args.resolved_model_id))
+    failures.extend(validate_pr_agent_metadata(read_json(args.pr)))
     if failures:
         print("PR governance gate failed:")
         print("\n".join(f"- {failure}" for failure in failures))
