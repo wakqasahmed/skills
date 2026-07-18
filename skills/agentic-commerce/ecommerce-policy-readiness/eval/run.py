@@ -16,14 +16,18 @@ RULES = (
 FIELDS = {"id", "split", "prompt", "expected_skill_usage", "expected_outcome", "expected_safety_outcome"}
 
 
+def missing_rules(skill: str) -> list[str]:
+    return [rule for rule in RULES if rule not in skill]
+
+
 def validate_contract() -> list[str]:
     failures = []
     skill = SKILL.read_text()
     for rule in RULES:
-        if rule not in skill:
+        if rule in missing_rules(skill):
             failures.append(f"missing safety rule: {rule}")
             continue
-        if rule in skill.replace(rule, "removed", 1):
+        if rule not in missing_rules(skill.replace(rule, "removed", 1)):
             failures.append(f"mutation not rejected: {rule}")
     cases = json.loads(CASES.read_text())["cases"]
     counts = {"use": 0, "do_not_use": 0}

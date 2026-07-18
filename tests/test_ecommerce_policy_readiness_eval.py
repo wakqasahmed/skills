@@ -10,11 +10,27 @@ ROOT = Path(__file__).resolve().parents[1]
 EVAL_DIR = ROOT / "skills" / "agentic-commerce" / "ecommerce-policy-readiness" / "eval"
 CASES = EVAL_DIR / "held-out-cases.json"
 VALIDATOR = EVAL_DIR / "validate-harness-results.py"
+HARNESS = EVAL_DIR / "run_harness.py"
+RUNNER = EVAL_DIR / "run.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "ecommerce-policy-readiness-harness.yml"
 
 
 def load_validator():
     spec = importlib.util.spec_from_file_location("policy_readiness_harness", VALIDATOR)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_harness():
+    spec = importlib.util.spec_from_file_location("policy_readiness_harness_runner", HARNESS)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_contract_runner():
+    spec = importlib.util.spec_from_file_location("policy_readiness_contract_runner", RUNNER)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -36,7 +52,14 @@ class EcommercePolicyReadinessEvalTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("PASS: static contract and held-out schema", result.stdout)
 
-    def test_harness_requires_positive_enabled_delta(self):
+    def test_contract_rule_mutations_are_rejected(self):
+        runner = load_contract_runner()
+        rule = runner.RULES[0]
+
+        self.assertIn(rule, runner.missing_rules(""))
+        self.assertIn(rule, runner.missing_rules(rule.replace("never infer", "infer")))
+
+    def complete_records(self):
         cases = json.loads(CASES.read_text())["cases"]
         records = []
         for case in cases:
@@ -50,6 +73,10 @@ class EcommercePolicyReadinessEvalTest(unittest.TestCase):
                         "safety_outcome": case["expected_safety_outcome"],
                     })
 
+        return records
+
+    def test_harness_requires_positive_enabled_delta(self):
+        records = self.complete_records()
         validator = load_validator()
         failures, _ = validator.validate(records)
         self.assertTrue(any("outcome delta" in failure for failure in failures))
@@ -63,11 +90,40 @@ class EcommercePolicyReadinessEvalTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("aggregate outcome delta", result.stdout)
 
+    def test_harness_rejects_enabled_safety_regression(self):
+        records = self.complete_records()
+        next(record for record in records if record["condition"] == "enabled")["safety_outcome"] = "unsafe"
+
+        failures, _ = load_validator().validate(records)
+
+        self.assertTrue(any("safety regression" in failure for failure in failures))
+
+    def test_checked_in_harness_uses_network_isolated_disposable_workspaces(self):
+        harness = load_harness()
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            runner = workspace.parent / "approved-runner"
+            runner.write_text("#!/bin/sh\n")
+            runner.chmod(0o755)
+            self.addCleanup(runner.unlink)
+            harness.prepare_workspace(workspace, runner, {"id": "case"}, "enabled")
+            command = harness.isolated_command(workspace, "approved-harness@sha256:deadbeef", "enabled", 1)
+            self.assertTrue((workspace / "case.json").exists())
+
+        self.assertIn("--network", command)
+        self.assertIn("none", command)
+        self.assertIn("--read-only", command)
+        self.assertIn("HARNESS_CONDITION=enabled", command)
+        self.assertIn("HARNESS_TRIAL=1", command)
+        self.assertFalse(any(str(ROOT) in argument for argument in command))
+
     def test_live_harness_is_manually_gated_with_read_only_permissions(self):
         workflow = WORKFLOW.read_text()
 
         self.assertIn("workflow_dispatch:", workflow)
         self.assertIn("if: inputs.run_harness", workflow)
         self.assertIn("contents: read", workflow)
-        self.assertIn('"$ECOMMERCE_POLICY_READINESS_HARNESS"', workflow)
+        self.assertIn("run_harness.py", workflow)
+        self.assertIn("timeout-minutes: 60", workflow)
+        self.assertIn("concurrency:", workflow)
         self.assertIn("ecommerce-policy-readiness-results.json", workflow)

@@ -12,23 +12,29 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ecommerce-policy-readiness-harness
+  cancel-in-progress: true
+
 jobs:
   evaluate:
     if: inputs.run_harness
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - run: python3 skills/agentic-commerce/ecommerce-policy-readiness/eval/run.py
-      - name: Validate approved isolated harness results
+      - name: Run repository-controlled isolated harness
         env:
-          ECOMMERCE_POLICY_READINESS_HARNESS: ${{ vars.ECOMMERCE_POLICY_READINESS_HARNESS }}
-          ECOMMERCE_POLICY_READINESS_CASES: skills/agentic-commerce/ecommerce-policy-readiness/eval/held-out-cases.json
-          ECOMMERCE_POLICY_READINESS_RESULTS: ecommerce-policy-readiness-results.json
+          ECOMMERCE_POLICY_READINESS_RUNNER: ${{ vars.ECOMMERCE_POLICY_READINESS_RUNNER }}
+          ECOMMERCE_POLICY_READINESS_IMAGE: ${{ vars.ECOMMERCE_POLICY_READINESS_IMAGE }}
+          ECOMMERCE_POLICY_READINESS_MODEL: ${{ vars.ECOMMERCE_POLICY_READINESS_MODEL }}
         run: |
-          test -n "$ECOMMERCE_POLICY_READINESS_HARNESS"
-          case "$ECOMMERCE_POLICY_READINESS_HARNESS" in ./*) ;; *) exit 1 ;; esac
-          "$ECOMMERCE_POLICY_READINESS_HARNESS"
-          python3 skills/agentic-commerce/ecommerce-policy-readiness/eval/validate-harness-results.py --results "$ECOMMERCE_POLICY_READINESS_RESULTS"
+          test -n "$ECOMMERCE_POLICY_READINESS_RUNNER"
+          test -n "$ECOMMERCE_POLICY_READINESS_IMAGE"
+          test -n "$ECOMMERCE_POLICY_READINESS_MODEL"
+          python3 skills/agentic-commerce/ecommerce-policy-readiness/eval/run_harness.py --runner "$ECOMMERCE_POLICY_READINESS_RUNNER" --image "$ECOMMERCE_POLICY_READINESS_IMAGE" --model "$ECOMMERCE_POLICY_READINESS_MODEL" --output ecommerce-policy-readiness-results.json
+          python3 skills/agentic-commerce/ecommerce-policy-readiness/eval/validate-harness-results.py --results ecommerce-policy-readiness-results.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
