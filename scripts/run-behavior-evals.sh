@@ -8,4 +8,5 @@ bash "$ROOT/skills/engineering/clarify-work/eval/run-eval.sh"
 bash "$ROOT/skills/engineering/subagent-pipeline/eval/run-eval.sh" --dry-run
 bash "$ROOT/skills/engineering/to-prd/eval/run-eval.sh"
 python3 "$ROOT/skills/agentic-commerce/commerce-protocol-readiness/eval/run.py"
+bash "$ROOT/skills/agentic-commerce/agent-readiness/eval/run-eval.sh"
 bash "$ROOT/skills/email-marketing/eval/run-eval.sh"
