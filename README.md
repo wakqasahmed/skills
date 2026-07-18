@@ -12,6 +12,8 @@ The installer discovers the complete catalogue. Automated agent installs select 
 
 ## Browse Skills
 
+skills.sh does not support repository-defined marketplace groups. Use this category-first catalogue to choose a relevant skill, then keep the canonical installer above for the complete set.
+
 ### [Agentic Commerce](skills/agentic-commerce/)
 
 - [Agent Readiness](skills/agentic-commerce/agent-readiness/)

@@ -23,6 +23,14 @@ RETIRED_REPOSITORIES = tuple(
 
 
 class ValidatePluginTest(unittest.TestCase):
+    def test_readme_documents_category_discovery_fallback(self) -> None:
+        readme = (REPOSITORY_ROOT / "README.md").read_text()
+
+        self.assertIn(
+            "skills.sh does not support repository-defined marketplace groups.",
+            readme,
+        )
+
     def test_open_code_review_workflow_contract(self) -> None:
         workflow = (
             REPOSITORY_ROOT / ".github" / "workflows" / "open-code-review.yml"
