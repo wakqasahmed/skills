@@ -41,12 +41,17 @@ REQUIRED_SAFEGUARDS = [
 READY_LEVELS = {"ready", "verified"}
 
 GUARDRAIL_HEADING = "## Guardrails"
-REQUIRED_GUARDRAIL_TERMS = [
-    "identity",
-    "consent",
-    "audit log",
-    "fraud control",
-    "human escalation",
+REQUIRED_ACTION_SAFETY_TERMS = [
+    "approval workflow",
+    "policy grounding",
+    "audit logging",
+    "human escalation path",
+]
+
+REQUIRED_PAYMENT_SAFETY_TERMS = [
+    "identity verification",
+    "consent capture",
+    "fraud controls",
 ]
 
 # A prose edit can keep every required term present while quietly voiding its
@@ -66,7 +71,7 @@ PERMISSIVE_RED_FLAGS = (
 def _sentences_mentioning(text: str, phrase: str) -> list[str]:
     # Split on sentence-ending punctuation; keep sentences containing `phrase`.
     import re
-    return [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if phrase in s]
+    return [" ".join(s.split()) for s in re.split(r"(?<=[.!?])\s+", text) if phrase in s]
 
 
 def _payment_guardrail_sentences(text: str) -> list[str]:
@@ -77,16 +82,23 @@ def _payment_guardrail_sentences(text: str) -> list[str]:
     ]
 
 
-def check_guardrail_text_in(skill_md: str) -> list[str]:
+def check_guardrail_text_in(skill_md: str, shared_guardrails_md: str) -> list[str]:
     if GUARDRAIL_HEADING not in skill_md:
         return ["SKILL.md has no '## Guardrails' section"]
 
-    guardrails_section = skill_md.split(GUARDRAIL_HEADING, 1)[1].lower()
+    skill_guardrails = skill_md.split(GUARDRAIL_HEADING, 1)[1]
+    if "../references/guardrails.md" not in skill_guardrails:
+        return ["SKILL.md no longer links to the shared guardrails contract"]
+
+    if "## Autonomous action safety" not in shared_guardrails_md:
+        return ["shared guardrails has no '## Autonomous action safety' section"]
+
+    guardrails_section = shared_guardrails_md.split("## Autonomous action safety", 1)[1].lower()
     failures = []
     if "autonomous payment" not in guardrails_section:
         failures.append("Guardrails section no longer mentions autonomous payments")
         return failures
-    for term in REQUIRED_GUARDRAIL_TERMS:
+    for term in REQUIRED_ACTION_SAFETY_TERMS + REQUIRED_PAYMENT_SAFETY_TERMS:
         if term not in guardrails_section:
             failures.append(
                 f"Guardrails section no longer requires '{term}' before recommending "
@@ -100,25 +112,26 @@ def check_guardrail_text_in(skill_md: str) -> list[str]:
         )
         return failures
 
-    # At least one sentence mentioning autonomous payments must carry hard
-    # prohibition framing ("do not recommend..."), not a soft/optional one.
+    action_sentences = _sentences_mentioning(guardrails_section, "autonomous checkout")
+    # The shared rule has one prohibition for autonomous actions and one
+    # payment-specific precondition. Both clauses must remain enforceable.
     if not any(
         cue in sentence and "recommend" in sentence
-        for sentence in payment_sentences
+        for sentence in action_sentences
         for cue in PROHIBITION_CUES
     ):
         failures.append(
-            "No sentence about autonomous payments uses hard prohibition framing "
+            "No sentence about autonomous actions uses hard prohibition framing "
             "(e.g. 'do not recommend') -- guardrail may have been softened into a "
             "suggestion"
         )
 
     # The prohibition must be an unconditional "without ALL of X, Y, and Z" --
     # not "without X or Y" (which makes the safeguards individually optional).
-    without_sentences = [s for s in payment_sentences if "without" in s]
+    without_sentences = [s for s in action_sentences if "without" in s]
     if not without_sentences:
         failures.append(
-            "No sentence about autonomous payments uses 'without' to make the "
+            "No sentence about autonomous actions uses 'without' to make the "
             "safeguards a precondition"
         )
     elif any(" or " in sentence.partition("without")[2] for sentence in without_sentences):
@@ -127,13 +140,23 @@ def check_guardrail_text_in(skill_md: str) -> list[str]:
             "'or' -- this makes them individually optional instead of all-required"
         )
 
-    for sentence in payment_sentences:
+    for sentence in action_sentences + payment_sentences:
         for red_flag in PERMISSIVE_RED_FLAGS:
             if red_flag in sentence:
                 failures.append(
                     f"Guardrail sentence about autonomous payments contains permissive "
                     f"language ('{red_flag}') that weakens the prohibition"
                 )
+
+    if not any(
+        "before it is recommended" in sentence
+        and all(term in sentence for term in REQUIRED_PAYMENT_SAFETY_TERMS)
+        for sentence in payment_sentences
+    ):
+        failures.append(
+            "No autonomous-payment sentence makes identity, consent, and fraud controls "
+            "mandatory before recommendation"
+        )
 
     return failures
 
@@ -195,7 +218,7 @@ def check_guardrail_text() -> list[str]:
         return ["Shared guardrails file is missing"]
 
     return check_guardrail_text_in(
-        skill_md + "\n\n## Guardrails\n" + SHARED_GUARDRAILS_PATH.read_text()
+        skill_md, SHARED_GUARDRAILS_PATH.read_text()
     )
 
 
@@ -205,13 +228,18 @@ def check_guardrail_text() -> list[str]:
 # rewrite that kept all 5 required terms present.
 GUARDRAIL_WASHING_FIXTURES = {
     "soft suggestion (keywords kept, prohibition removed)": (
-        "## Guardrails\n- Autonomous payments benefit from identity, consent, audit logs, "
-        "fraud controls, and human escalation, which are nice-to-haves that can "
+        "## Autonomous action safety\nDo not recommend autonomous checkout, payment, or "
+        "support actions without approval workflows, policy grounding, audit logging, and a "
+        "human escalation path. Autonomous payment execution additionally requires identity "
+        "verification, consent capture, and fraud controls, which are nice-to-haves that can "
         "strengthen a recommendation over time."
     ),
     "AND-to-OR (keywords kept, all-required weakened to any-one-of)": (
-        "## Guardrails\n- Do not recommend autonomous payments without at least one of "
-        "identity, consent, audit logs, fraud controls, or human escalation."
+        "## Autonomous action safety\nDo not recommend autonomous checkout, payment, or "
+        "support actions without at least one of approval workflows, policy grounding, audit "
+        "logging, or a human escalation path. Autonomous payment execution additionally "
+        "requires identity verification, consent capture, and fraud controls before it is "
+        "recommended."
     ),
 }
 
@@ -219,7 +247,10 @@ GUARDRAIL_WASHING_FIXTURES = {
 def check_guardrail_washing_resistance() -> list[str]:
     failures = []
     for label, mutated_text in GUARDRAIL_WASHING_FIXTURES.items():
-        if not check_guardrail_text_in(mutated_text):
+        if not check_guardrail_text_in(
+            "## Guardrails\n- See `../references/guardrails.md` for shared cross-skill guardrails.",
+            mutated_text,
+        ):
             failures.append(f"guardrail-washing fixture not caught: {label}")
     return failures
 

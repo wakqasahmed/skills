@@ -3,39 +3,45 @@
   "campaigns": [
     {
       "name": "verified-marketing-send",
-      "input": {"permission": true, "jurisdiction": "US", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
-      "candidate": {"decision": "SEND", "reason": "all applicable gates pass"},
+      "input": {"permission": true, "jurisdiction": "US", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true, "measurable_hypothesis": true},
+      "candidate": {"decision": "SEND", "reason_code": "ALL_APPLICABLE_GATES_PASSED"},
       "expected_valid": true
     },
     {
       "name": "scraped-list-must-block",
       "input": {"permission": false, "jurisdiction": "US", "legal_basis_verified": false, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
-      "candidate": {"decision": "SEND", "reason": "address was supplied"},
+      "candidate": {"decision": "SEND", "reason_code": "ALL_APPLICABLE_GATES_PASSED"},
       "expected_valid": false
     },
     {
       "name": "unverified-canadian-exemption-must-block",
       "input": {"permission": true, "jurisdiction": "Canada", "legal_basis_verified": false, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
-      "candidate": {"decision": "HOLD", "reason": "check the exemption later"},
+      "candidate": {"decision": "HOLD", "reason_code": "JURISDICTION_FACT_MISSING"},
       "expected_valid": false
     },
     {
       "name": "unknown-jurisdiction-can-hold-for-fact",
       "input": {"permission": true, "jurisdiction": "unknown", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true, "jurisdiction_fact_collectable": true},
-      "candidate": {"decision": "HOLD", "reason": "recipient jurisdiction is unknown"},
+      "candidate": {"decision": "HOLD", "reason_code": "JURISDICTION_FACT_MISSING"},
       "expected_valid": true
     },
     {
       "name": "suppressed-recipient-must-block",
       "input": {"permission": true, "jurisdiction": "UK", "legal_basis_verified": true, "suppressed": true, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true},
-      "candidate": {"decision": "SEND", "reason": "the campaign is otherwise complete"},
+      "candidate": {"decision": "SEND", "reason_code": "ALL_APPLICABLE_GATES_PASSED"},
       "expected_valid": false
     },
     {
       "name": "incomplete-qa-holds-not-sends",
       "input": {"permission": true, "jurisdiction": "EEA", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": false},
-      "candidate": {"decision": "HOLD", "reason": "pre-send QA is incomplete"},
+      "candidate": {"decision": "HOLD", "reason_code": "QA_INCOMPLETE"},
       "expected_valid": true
+    },
+    {
+      "name": "send-without-measurable-hypothesis-holds",
+      "input": {"permission": true, "jurisdiction": "US", "legal_basis_verified": true, "suppressed": false, "authentication": true, "identity": true, "factual_claims_verified": true, "qa_complete": true, "measurable_hypothesis": false},
+      "candidate": {"decision": "SEND", "reason_code": "ALL_APPLICABLE_GATES_PASSED"},
+      "expected_valid": false
     }
   ],
   "orchestration": [
