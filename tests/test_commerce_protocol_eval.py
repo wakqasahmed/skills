@@ -36,6 +36,27 @@ class CommerceProtocolEvalTest(unittest.TestCase):
         self.assertEqual(runner.validate_contract(), [])
         self.assertNotIn("score", runner.__dict__)
 
+    def test_static_safety_contract_rejects_keyword_preserving_mutations(self):
+        runner = load_runner()
+        skill = "## Guardrails\n- See `../references/guardrails.md` for shared cross-skill guardrails."
+        softened = (
+            "## Autonomous action safety\nDo not recommend autonomous checkout, payment, or "
+            "support actions without approval workflows, policy grounding, audit logging, and a "
+            "human escalation path. Autonomous payment execution additionally requires identity "
+            "verification, consent capture, and fraud controls, which are nice-to-haves that can "
+            "strengthen a recommendation over time."
+        )
+        optional = (
+            "## Autonomous action safety\nDo not recommend autonomous checkout, payment, or "
+            "support actions without at least one of approval workflows, policy grounding, audit "
+            "logging, or a human escalation path. Autonomous payment execution additionally "
+            "requires identity verification, consent capture, and fraud controls before it is "
+            "recommended."
+        )
+
+        self.assertTrue(runner.check_guardrail_text_in(skill, softened))
+        self.assertTrue(runner.check_guardrail_text_in(skill, optional))
+
     def test_contract_runner_is_offline_and_reports_harness_gate(self):
         result = subprocess.run(
             ["python3", str(RUNNER)], text=True, capture_output=True, check=False
