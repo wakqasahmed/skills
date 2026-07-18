@@ -3,10 +3,6 @@ name: Email guardrails harness
 on:
   workflow_dispatch:
     inputs:
-      runner_command:
-        description: 'Agent harness command; must emit JSON records to stdout'
-        required: true
-        type: string
       trials:
         description: 'Trials per condition (3-6)'
         required: true
@@ -24,7 +20,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.x'}
-      - run: python3 skills/email-marketing/00-email-marketing-guardrails/eval/run_harness.py --command '${{ inputs.runner_command }}' --trials '${{ inputs.trials }}' --output email-guardrails-harness.json
+      - name: Run repository-controlled isolated harness
+        env:
+          EMAIL_GUARDRAILS_HARNESS: ${{ vars.EMAIL_GUARDRAILS_HARNESS }}
+        run: |
+          test -n "$EMAIL_GUARDRAILS_HARNESS"
+          python3 skills/email-marketing/00-email-marketing-guardrails/eval/run_harness.py --runner "$EMAIL_GUARDRAILS_HARNESS" --trials '${{ inputs.trials }}' --output email-guardrails-harness.json
       - uses: actions/upload-artifact@v4
         with:
           name: email-guardrails-harness
