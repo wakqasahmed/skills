@@ -1,0 +1,36 @@
+name: Agent readiness behavior eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated harness
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  behavior-eval:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash skills/agentic-commerce/agent-readiness/eval/run-eval.sh
+      - name: Run approved isolated harness
+        env:
+          AGENT_READINESS_EVAL_HARNESS: ${{ vars.AGENT_READINESS_EVAL_HARNESS }}
+          AGENT_READINESS_EVAL_CASES: skills/agentic-commerce/agent-readiness/eval/fixtures/held-out.json
+          AGENT_READINESS_EVAL_RESULTS: agent-readiness-eval-results.json
+        run: |
+          test -n "$AGENT_READINESS_EVAL_HARNESS"
+          "$AGENT_READINESS_EVAL_HARNESS"
+          python3 skills/agentic-commerce/agent-readiness/eval/validate-harness-results.py --results "$AGENT_READINESS_EVAL_RESULTS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-readiness-behavior-eval-${{ github.run_id }}
+          path: agent-readiness-eval-results.json
+          if-no-files-found: error
