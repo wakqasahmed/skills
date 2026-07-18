@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -32,13 +33,24 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertIn("contents: read", workflow)
         self.assertIn("pull-requests: write", workflow)
         self.assertIn("uses: alibaba/open-code-review@v1.7.12", workflow)
-        for secret in (
-            "OCR_LLM_URL",
-            "OCR_LLM_AUTH_TOKEN",
-            "OCR_LLM_MODEL",
-            "OCR_USE_ANTHROPIC",
-        ):
-            self.assertIn(f"secrets.{secret}", workflow)
+        self.assertIn(
+            "if: github.event.pull_request.head.repo.full_name == github.repository",
+            workflow,
+        )
+        ocr_inputs = re.findall(
+            r"^          (llm_(?:url|auth_token|model|use_anthropic)): (.+)$",
+            workflow,
+            flags=re.MULTILINE,
+        )
+        self.assertEqual(
+            ocr_inputs,
+            [
+                ("llm_url", "${{ secrets.OCR_LLM_URL }}"),
+                ("llm_auth_token", "${{ secrets.OCR_LLM_AUTH_TOKEN }}"),
+                ("llm_model", "${{ secrets.OCR_LLM_MODEL }}"),
+                ("llm_use_anthropic", "${{ secrets.OCR_USE_ANTHROPIC }}"),
+            ],
+        )
         self.assertIn("sticky_summary: 'true'", workflow)
         self.assertIn("incremental: 'true'", workflow)
 
