@@ -20,7 +20,6 @@ jobs:
       github.event.issue.pull_request != null
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Verify latest OCR findings are dispositioned
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,16 +45,22 @@ jobs:
             exit 0
           fi
 
-          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/comments?per_page=100" > /tmp/ocr-review-comments.json
-          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" > /tmp/ocr-issue-comments.json
-          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" > /tmp/pr-commits.json
+          gh api "repos/$REPOSITORY/contents/support/ai-engineering-workflow/scripts/verify-pr-governance.py?ref=$HEAD_SHA" \
+            -H 'Accept: application/vnd.github.raw+json' > /tmp/verify-pr-governance.py
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/comments?per_page=100" --paginate --slurp > /tmp/ocr-review-comment-pages.json
+          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" --paginate --slurp > /tmp/ocr-issue-comment-pages.json
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" --paginate --slurp > /tmp/pr-commit-pages.json
+          jq 'add' /tmp/ocr-review-comment-pages.json > /tmp/ocr-review-comments.json
+          jq 'add' /tmp/ocr-issue-comment-pages.json > /tmp/ocr-issue-comments.json
+          jq 'add' /tmp/pr-commit-pages.json > /tmp/pr-commits.json
 
           set +e
-          python3 support/ai-engineering-workflow/scripts/verify-pr-governance.py \
+          python3 /tmp/verify-pr-governance.py \
             --head-sha "$HEAD_SHA" \
             --review-comments /tmp/ocr-review-comments.json \
             --issue-comments /tmp/ocr-issue-comments.json \
-            --pr-commits /tmp/pr-commits.json
+            --pr-commits /tmp/pr-commits.json \
+            --pr /tmp/pr.json
           gate_exit=$?
           set -e
 
