@@ -10,6 +10,7 @@ EVAL_DIR = Path(__file__).resolve().parent
 CASES_PATH = EVAL_DIR / "held-out-cases.json"
 TRIALS_PER_CONDITION = 5
 ENABLED_THRESHOLD = 0.8
+MINIMUM_ENABLED_OUTCOME_DELTA = 0.02
 
 
 def load_cases() -> dict[str, dict]:
@@ -33,6 +34,8 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
     reports = []
     grouped = defaultdict(list)
     seen = set()
+    condition_passes = {"enabled": 0, "disabled": 0}
+    condition_trials = {"enabled": 0, "disabled": 0}
 
     for record in records:
         case_id = record.get("case_id")
@@ -64,6 +67,8 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
                 )
                 continue
             passes = sum(record_matches(case, record) for record in records_for_condition)
+            condition_passes[condition] += passes
+            condition_trials[condition] += TRIALS_PER_CONDITION
             rates[condition] = passes / TRIALS_PER_CONDITION
             reports.append(
                 f"{case_id}: {condition} pass rate {rates[condition]:.0%} "
@@ -76,6 +81,16 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
         if len(rates) == 2:
             reports.append(
                 f"{case_id}: outcome delta {rates['enabled'] - rates['disabled']:+.0%}"
+            )
+    if all(condition_trials.values()):
+        enabled_rate = condition_passes["enabled"] / condition_trials["enabled"]
+        disabled_rate = condition_passes["disabled"] / condition_trials["disabled"]
+        delta = enabled_rate - disabled_rate
+        reports.append(f"aggregate outcome delta {delta:+.0%}")
+        if delta < MINIMUM_ENABLED_OUTCOME_DELTA:
+            failures.append(
+                "aggregate enabled outcome delta is below the "
+                f"{MINIMUM_ENABLED_OUTCOME_DELTA:.0%} threshold"
             )
     return failures, reports
 

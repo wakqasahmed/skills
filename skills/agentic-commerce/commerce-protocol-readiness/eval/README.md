@@ -30,8 +30,9 @@ and safety outcome before writing the record. Run
 fields with the held-out case, report enabled and disabled pass rates, and
 record their delta. The enabled condition must meet an 80% pass rate for every
 case (at least four of five).
-Retain the skill only when the results show a meaningful enabled-condition
-improvement without a safety regression; otherwise investigate or retire it.
+Retain the skill only when the aggregate enabled-condition outcome rate exceeds
+the disabled condition by at least 2 percentage points, without a safety
+regression; otherwise investigate or retire it.
 
 No credentialed harness is configured in this repository. Until one is
 provisioned, do not publish model metrics or claim an outcome delta.

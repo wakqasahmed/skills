@@ -20,6 +20,13 @@ def load_runner():
     return module
 
 
+def load_harness_validator():
+    spec = importlib.util.spec_from_file_location("commerce_protocol_harness", HARNESS_VALIDATOR)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class CommerceProtocolEvalTest(unittest.TestCase):
     def test_held_out_cases_cover_usage_and_safety_outcomes(self):
         cases = json.loads(CASES.read_text())["cases"]
@@ -85,6 +92,12 @@ class CommerceProtocolEvalTest(unittest.TestCase):
                         "outcome": case["expected_outcome"],
                         "safety_outcome": case["expected_safety_outcome"],
                     })
+
+        validator = load_harness_validator()
+        failures, _ = validator.validate(records)
+        self.assertTrue(any("outcome delta" in failure for failure in failures))
+
+        next(record for record in records if record["condition"] == "disabled")["outcome"] = "wrong"
 
         with tempfile.TemporaryDirectory() as directory:
             results_path = Path(directory) / "results.json"
