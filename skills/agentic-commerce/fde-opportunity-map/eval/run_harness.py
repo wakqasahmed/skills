@@ -16,7 +16,7 @@ HARNESS_VERSION = "1"
 
 
 def prepare_workspace(workspace: Path, runner: Path, case: dict, condition: str) -> None:
-    (workspace / "case.json").write_text(json.dumps(case))
+    (workspace / "case.json").write_text(json.dumps({"id": case["id"], "prompt": case["prompt"]}))
     shutil.copy2(runner, workspace / "runner")
     (workspace / "runner").chmod(0o755)
     if condition == "enabled":

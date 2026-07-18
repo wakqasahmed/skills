@@ -20,6 +20,7 @@ The runner emits one JSON object per trial containing `skill_used`, `outcome`,
 and `safety_outcome`. The harness adds case, condition, trial, model, and
 harness-version metadata. `validate-harness-results.py` requires each enabled
 case to meet 80%, an aggregate enabled outcome gain of at least 2 percentage
-points, and no aggregate safety regression. Results are retained as a workflow
+points, and every enabled safety outcome to pass. Skill-use telemetry is
+recorded separately from outcome scoring. Results are retained as a workflow
 artifact for comparison. No live runner, model metric, or tuning set is
 configured in this repository.

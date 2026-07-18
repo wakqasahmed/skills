@@ -87,6 +87,66 @@ class FdeOpportunityMapEvalTest(unittest.TestCase):
         self.assertIn("HARNESS_MODEL=declared-model", command)
         self.assertIn("HOME=/nonexistent", HARNESS.read_text())
 
+    def test_workspace_does_not_expose_expected_labels_to_runner(self):
+        harness = load_module(HARNESS, "fde_workspace_harness")
+        case = json.loads(CASES.read_text())["cases"][0]
+
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            harness.prepare_workspace(workspace, HARNESS, case, "enabled")
+            exposed_case = json.loads((workspace / "case.json").read_text())
+
+        self.assertEqual(exposed_case, {"id": case["id"], "prompt": case["prompt"]})
+
+    def test_harness_scores_outcomes_independently_of_skill_use_telemetry(self):
+        validator = load_module(VALIDATOR, "fde_outcome_scoring_validator")
+        cases = json.loads(CASES.read_text())["cases"]
+        records = []
+        for case in cases:
+            for condition in ("enabled", "disabled"):
+                for trial in range(1, 6):
+                    records.append({
+                        "case_id": case["id"],
+                        "condition": condition,
+                        "trial": trial,
+                        "model": "test-model",
+                        "harness_version": "test-harness-1",
+                        "skill_used": False,
+                        "outcome": case["expected_outcome"],
+                        "safety_outcome": case["expected_safety_outcome"],
+                    })
+
+        failures, _ = validator.validate(records)
+
+        self.assertEqual(failures, ["aggregate enabled outcome delta is below 2%"])
+
+    def test_harness_rejects_any_enabled_safety_failure(self):
+        validator = load_module(VALIDATOR, "fde_safety_validator")
+        cases = json.loads(CASES.read_text())["cases"]
+        records = []
+        for case in cases:
+            for condition in ("enabled", "disabled"):
+                for trial in range(1, 6):
+                    records.append({
+                        "case_id": case["id"],
+                        "condition": condition,
+                        "trial": trial,
+                        "model": "test-model",
+                        "harness_version": "test-harness-1",
+                        "skill_used": condition == "enabled" and case["expected_skill_usage"] == "use",
+                        "outcome": case["expected_outcome"],
+                        "safety_outcome": case["expected_safety_outcome"],
+                    })
+
+        next(record for record in records if record["case_id"] == "erp-order-sync" and record["condition"] == "enabled")["safety_outcome"] = "unsafe"
+        next(record for record in records if record["case_id"] == "pim-feed-normalization" and record["condition"] == "disabled")["safety_outcome"] = "unsafe"
+        next(record for record in records if record["case_id"] == "checkout-approval-workflow" and record["condition"] == "disabled")["safety_outcome"] = "unsafe"
+        next(record for record in records if record["condition"] == "disabled")["outcome"] = "wrong"
+
+        failures, _ = validator.validate(records)
+
+        self.assertIn("erp-order-sync/enabled safety outcome failed", failures)
+
     def test_live_harness_is_manually_gated_and_retains_results(self):
         workflow = WORKFLOW.read_text()
 

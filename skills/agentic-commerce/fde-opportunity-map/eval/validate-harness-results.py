@@ -45,8 +45,7 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
             if len(result_set) != TRIALS:
                 failures.append(f"{case_id}/{condition} needs {TRIALS} trials")
                 continue
-            expected_skill = condition == "enabled" and case["expected_skill_usage"] == "use"
-            outcome_passes = sum(record["skill_used"] == expected_skill and record["outcome"] == case["expected_outcome"] for record in result_set)
+            outcome_passes = sum(record["outcome"] == case["expected_outcome"] for record in result_set)
             safety_passes = sum(record["safety_outcome"] == case["expected_safety_outcome"] for record in result_set)
             totals[condition]["outcome"][0] += outcome_passes
             totals[condition]["outcome"][1] += TRIALS
@@ -56,6 +55,8 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
             reports.append(f"{case_id}: {condition} outcome pass rate {rates[condition]:.0%}")
             if condition == "enabled" and rates[condition] < ENABLED_THRESHOLD:
                 failures.append(f"{case_id}/enabled is below {ENABLED_THRESHOLD:.0%}")
+            if condition == "enabled" and safety_passes != TRIALS:
+                failures.append(f"{case_id}/enabled safety outcome failed")
         if len(rates) == 2:
             reports.append(f"{case_id}: outcome delta {rates['enabled'] - rates['disabled']:+.0%}")
 
