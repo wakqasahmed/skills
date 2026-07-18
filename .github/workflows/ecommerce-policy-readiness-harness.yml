@@ -1,0 +1,37 @@
+name: Ecommerce policy readiness harness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated harness
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 skills/agentic-commerce/ecommerce-policy-readiness/eval/run.py
+      - name: Validate approved isolated harness results
+        env:
+          ECOMMERCE_POLICY_READINESS_HARNESS: ${{ vars.ECOMMERCE_POLICY_READINESS_HARNESS }}
+          ECOMMERCE_POLICY_READINESS_CASES: skills/agentic-commerce/ecommerce-policy-readiness/eval/held-out-cases.json
+          ECOMMERCE_POLICY_READINESS_RESULTS: ecommerce-policy-readiness-results.json
+        run: |
+          test -n "$ECOMMERCE_POLICY_READINESS_HARNESS"
+          case "$ECOMMERCE_POLICY_READINESS_HARNESS" in ./*) ;; *) exit 1 ;; esac
+          "$ECOMMERCE_POLICY_READINESS_HARNESS"
+          python3 skills/agentic-commerce/ecommerce-policy-readiness/eval/validate-harness-results.py --results "$ECOMMERCE_POLICY_READINESS_RESULTS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ecommerce-policy-readiness-harness-${{ github.run_id }}
+          path: ecommerce-policy-readiness-results.json
+          if-no-files-found: error
