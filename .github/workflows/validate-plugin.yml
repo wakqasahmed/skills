@@ -20,6 +20,7 @@ jobs:
       - run: python3 -m unittest tests/test_agent_readiness_eval.py
       - run: python3 -m unittest tests/test_commerce_protocol_eval.py
       - run: python3 -m unittest tests/test_ecommerce_policy_readiness_eval.py
+      - run: python3 -m unittest tests/test_product_knowledge_gap_analysis_eval.py
       - run: python3 -m unittest tests/test_llms_crawler_eval.py
       - run: python3 -m unittest tests/test_fde_opportunity_map_eval.py
       - run: python3 -m unittest tests/test_trigger_evals.py

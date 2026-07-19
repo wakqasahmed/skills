@@ -1,0 +1,43 @@
+name: Product knowledge gap analysis harness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated harness
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-knowledge-gap-analysis-harness
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 skills/agentic-commerce/product-knowledge-gap-analysis/eval/run.py
+      - name: Run repository-controlled isolated harness
+        env:
+          PRODUCT_KNOWLEDGE_EVAL_RUNNER: ${{ vars.PRODUCT_KNOWLEDGE_EVAL_RUNNER }}
+          PRODUCT_KNOWLEDGE_EVAL_IMAGE: ${{ vars.PRODUCT_KNOWLEDGE_EVAL_IMAGE }}
+          PRODUCT_KNOWLEDGE_EVAL_MODEL: ${{ vars.PRODUCT_KNOWLEDGE_EVAL_MODEL }}
+        run: |
+          test -n "$PRODUCT_KNOWLEDGE_EVAL_RUNNER"
+          test -n "$PRODUCT_KNOWLEDGE_EVAL_IMAGE"
+          test -n "$PRODUCT_KNOWLEDGE_EVAL_MODEL"
+          python3 skills/agentic-commerce/product-knowledge-gap-analysis/eval/run_harness.py --runner "$PRODUCT_KNOWLEDGE_EVAL_RUNNER" --image "$PRODUCT_KNOWLEDGE_EVAL_IMAGE" --model "$PRODUCT_KNOWLEDGE_EVAL_MODEL" --trials 5 --output product-knowledge-gap-analysis-results.json
+          python3 skills/agentic-commerce/product-knowledge-gap-analysis/eval/validate-harness-results.py --results product-knowledge-gap-analysis-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: product-knowledge-gap-analysis-harness-${{ github.run_id }}
+          path: product-knowledge-gap-analysis-results.json
+          if-no-files-found: error
