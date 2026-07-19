@@ -16,6 +16,46 @@ logic or expected outcomes.
 The container is read-only, networkless, credentialless, and has no mounted
 repository or home directory.
 
+## Optional OpenRouter live eval
+
+The default runner remains `isolated`; it is the only runner that uses the
+pinned image and Docker network isolation. OpenRouter is an explicit,
+manually selected live-eval runner, never pull-request CI. It executes the
+checked-in adapter directly on the GitHub-hosted runner. The adapter uses the
+fixed `https://openrouter.ai/api/v1/chat/completions` endpoint. It sends each
+held-out prompt, observations, and enabled skill/check content to OpenRouter.
+Do not use real customer, production, or secret data in the fixtures; provider
+logging and retention may apply.
+
+Set these repository settings before dispatching it:
+
+- Actions secret `OPENROUTER_API_KEY`: an OpenRouter key. It is injected only
+  into the OpenRouter workflow step and is never written to artifacts or code.
+- Actions variable `SEO_AEO_GEO_AUDIT_EVAL_MODEL`:
+  `nvidia/nemotron-3-super-120b-a12b:free`.
+- Actions variable `SEO_AEO_GEO_AUDIT_EVAL_MODEL_VERSION`: the concrete
+  version/date approved for this run. The result artifact records it verbatim.
+
+In Actions, dispatch `SEO AEO GEO audit harness`, set `run_harness` to true,
+select `openrouter`, and use the protected `main` branch. The secret-backed
+step is skipped for every other ref. It runs five enabled and five disabled trials per
+held-out case, validates the artifact outcomes, and uploads the JSON results.
+The runner retries HTTP 429 responses up to five times and honors provider
+`Retry-After` or `X-RateLimit-Reset` delays when supplied; free-model capacity
+can still make a run take longer or fail after those bounded retries.
+For a local run, export `OPENROUTER_API_KEY` only in the invoking shell and run:
+
+```bash
+python3 skills/agentic-commerce/seo-aeo-geo-audit/eval/run_harness.py \
+  --runner openrouter \
+  --model nvidia/nemotron-3-super-120b-a12b:free \
+  --model-version approved-version-or-date \
+  --trials 5 \
+  --output seo-aeo-geo-audit-results.json
+python3 skills/agentic-commerce/seo-aeo-geo-audit/eval/validate-harness-results.py \
+  --results seo-aeo-geo-audit-results.json
+```
+
 The runner emits one JSON object with protocol version
 `seo-aeo-geo-artifact-runner/v1`, `model`, `model_version`, `skill_used`, and
 an `audit_artifact` object.
