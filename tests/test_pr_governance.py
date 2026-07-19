@@ -93,7 +93,12 @@ class OcrDispositionTests(unittest.TestCase):
         ]
         comments.append({"id": 101, "commit_id": "latest", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-page -->"})
 
-        failures = governance.validate_ocr_dispositions("latest", comments, [], [{"sha": "latest"}])
+        failures = governance.validate_ocr_dispositions(
+            head_sha="latest",
+            review_comments=comments,
+            issue_comments=[],
+            pr_commits=[{"sha": "latest"}],
+        )
 
         self.assertEqual(failures, ["OCR finding 101 on latest head is undispositioned"])
 
@@ -108,7 +113,12 @@ class AgentLabelTests(unittest.TestCase):
 
     def test_rejects_role_labels_when_model_id_is_unavailable(self):
         failures = governance.validate_pr_agent_metadata({
-            "body": "- Resolved model ID: unavailable\n- Metadata limitation: runtime did not expose it",
+            "body": "\n".join([
+                "- Resolved model ID: unavailable",
+                "- Metadata limitation: runtime did not expose it",
+                "- Verified agent labels: agent:gpt5-high-reviewer",
+                "- Legacy agent labels: N/A",
+            ]),
             "labels": [{"name": "agent:gpt5-high-reviewer"}],
         })
 
@@ -124,11 +134,69 @@ class AgentLabelTests(unittest.TestCase):
 
     def test_rejects_a_pr_label_that_does_not_match_the_recorded_model(self):
         failures = governance.validate_pr_agent_metadata({
-            "body": "- Resolved model ID: gpt5.6-terra\n- Metadata limitation: N/A",
+            "body": "\n".join([
+                "- Resolved model ID: gpt5.6-terra",
+                "- Metadata limitation: N/A",
+                "- Verified agent labels: agent:gpt5-high-reviewer",
+                "- Legacy agent labels: N/A",
+            ]),
             "labels": [{"name": "agent:gpt5-high-reviewer"}],
         })
 
         self.assertEqual(failures, ["Invalid agent label: agent:gpt5-high-reviewer"])
+
+    def test_accepts_a_recorded_legacy_label_with_a_verified_current_label(self):
+        failures = governance.validate_pr_agent_metadata({
+            "body": "\n".join([
+                "- Resolved model ID: gpt5.6-terra",
+                "- Metadata limitation: N/A",
+                "- Verified agent labels: agent:gpt5.6-terra-medium-fixer",
+                "- Legacy agent labels: agent:gpt5-high-reviewer",
+            ]),
+            "labels": [
+                {"name": "agent:gpt5.6-terra-medium-fixer"},
+                {"name": "agent:gpt5-high-reviewer"},
+            ],
+        })
+
+        self.assertEqual(failures, [])
+
+    def test_rejects_an_unrecorded_agent_label(self):
+        failures = governance.validate_pr_agent_metadata({
+            "body": "\n".join([
+                "- Resolved model ID: gpt5.6-terra",
+                "- Metadata limitation: N/A",
+                "- Verified agent labels: agent:gpt5.6-terra-medium-fixer",
+                "- Legacy agent labels: N/A",
+            ]),
+            "labels": [
+                {"name": "agent:gpt5.6-terra-medium-fixer"},
+                {"name": "agent:gpt5-high-reviewer"},
+            ],
+        })
+
+        self.assertEqual(failures, ["Unverified agent label: agent:gpt5-high-reviewer"])
+
+
+class RepositoryPolicyTests(unittest.TestCase):
+    def test_requires_the_ocr_gate_for_the_default_branch(self):
+        rulesets = [{
+            "enforcement": "active",
+            "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "rules": [{
+                "type": "required_status_checks",
+                "parameters": {"required_status_checks": [{"context": "OCR disposition gate"}]},
+            }],
+        }]
+
+        failures = governance.validate_required_status_check_policy(rulesets)
+
+        self.assertEqual(failures, [])
+
+    def test_rejects_a_policy_without_the_ocr_gate(self):
+        failures = governance.validate_required_status_check_policy([])
+
+        self.assertEqual(failures, ["Default branch must require OCR disposition gate"])
 
 
 class OcrDispositionWorkflowTests(unittest.TestCase):
@@ -139,6 +207,8 @@ class OcrDispositionWorkflowTests(unittest.TestCase):
         self.assertIn("Open Code Review", workflow)
         self.assertIn("issue_comment:", workflow)
         self.assertIn("statuses: write", workflow)
+        self.assertIn("timeout-minutes: 10", workflow)
+        self.assertIn("cancel-in-progress: true", workflow)
         self.assertIn("--pr-commits", workflow)
         self.assertIn("?ref=$HEAD_SHA", workflow)
         self.assertIn("/tmp/verify-pr-governance.py", workflow)
