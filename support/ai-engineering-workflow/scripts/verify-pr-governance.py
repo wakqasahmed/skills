@@ -104,7 +104,7 @@ def recorded_labels(match):
     return {label.strip() for label in match.group(1).split(",") if label.strip()}
 
 
-def validate_pr_agent_metadata(pr):
+def validate_pr_agent_metadata(pr, legacy_agent_labels=()):
     labels = [label["name"] for label in pr.get("labels", [])]
     body = pr.get("body") or ""
     model_match = RESOLVED_MODEL_RE.search(body)
@@ -112,6 +112,8 @@ def validate_pr_agent_metadata(pr):
     verified_labels = recorded_labels(VERIFIED_AGENT_LABELS_RE.search(body))
     legacy_labels = recorded_labels(LEGACY_AGENT_LABELS_RE.search(body))
     actual_agent_labels = {label for label in labels if label.startswith("agent:")}
+    trusted_legacy_labels = actual_agent_labels & set(legacy_agent_labels)
+    new_agent_labels = actual_agent_labels - trusted_legacy_labels
 
     if not model_match:
         return ["PR is missing the resolved model ID record"]
@@ -124,10 +126,13 @@ def validate_pr_agent_metadata(pr):
         return ["PR with a resolved model ID must record Metadata limitation: N/A"]
 
     current_model_id = None if resolved_model_id.lower() == "unavailable" else resolved_model_id
-    failures = validate_agent_labels(verified_labels, current_model_id)
-    recorded_agent_labels = verified_labels | legacy_labels
-    for label in sorted(actual_agent_labels - recorded_agent_labels):
+    failures = validate_agent_labels(new_agent_labels, current_model_id)
+    for label in sorted(new_agent_labels - verified_labels):
         failures.append(f"Unverified agent label: {label}")
+    for label in sorted(verified_labels - new_agent_labels):
+        failures.append(f"Verified agent label is not applied: {label}")
+    if legacy_labels != trusted_legacy_labels:
+        failures.append("Legacy agent labels do not match the base-ref baseline")
     return failures
 
 
@@ -158,6 +163,7 @@ def main():
     parser.add_argument("--issue-comments", required=True)
     parser.add_argument("--pr-commits", required=True)
     parser.add_argument("--pr", required=True)
+    parser.add_argument("--legacy-agent-labels", required=True)
     parser.add_argument("--new-agent-label", action="append", default=[])
     parser.add_argument("--resolved-model-id")
     args = parser.parse_args()
@@ -169,7 +175,10 @@ def main():
         read_json(args.pr_commits),
     )
     failures.extend(validate_agent_labels(args.new_agent_label, args.resolved_model_id))
-    failures.extend(validate_pr_agent_metadata(read_json(args.pr)))
+    failures.extend(validate_pr_agent_metadata(
+        read_json(args.pr),
+        read_json(args.legacy_agent_labels),
+    ))
     if failures:
         print("PR governance gate failed:")
         print("\n".join(f"- {failure}" for failure in failures))
