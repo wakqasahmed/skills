@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "id": "allergen-ingredient-gap", "split": "held_out", "expected_skill_usage": "use",
+      "prompt": "Audit this snack catalog for knowledge gaps that could cause unsafe allergen answers.",
+      "catalog": [{"sku": "SN-101", "name": "Crunchy Pea Bites", "ingredients": "peas, sunflower oil, salt"}, {"sku": "SN-102", "name": "Cocoa Oat Bar", "ingredients": "oats, cocoa, sugar", "allergens": "oats"}],
+      "feed": {"source": "merchant_feed", "products": [{"sku": "SN-101", "availability": "in_stock"}, {"sku": "SN-102", "availability": "in_stock"}]},
+      "expected_artifact": {"decision": "analyze", "observed_gaps": [{"sku": "SN-101", "field": "allergens", "source": "manufacturer_specification", "remediation": "request_manufacturer_specification"}]}
+    },
+    {
+      "id": "variant-sizing-gap", "split": "held_out", "expected_skill_usage": "use",
+      "prompt": "Find variant fields missing from these footwear listings that block size and fit answers.",
+      "catalog": [{"sku": "SH-201-BLK-8", "name": "Trail Runner", "variant": {"color": "black", "size": "8"}}, {"sku": "SH-201-BLK-9", "name": "Trail Runner", "variant": {"color": "black", "size": "9", "fit": "wide"}}],
+      "feed": {"source": "pim", "products": [{"sku": "SH-201-BLK-8", "variant_id": "201-8"}, {"sku": "SH-201-BLK-9", "variant_id": "201-9"}]},
+      "expected_artifact": {"decision": "analyze", "observed_gaps": [{"sku": "SH-201-BLK-8", "field": "fit", "source": "pim", "remediation": "enrich_variant_attribute"}]}
+    },
+    {
+      "id": "device-compatibility-gap", "split": "held_out", "expected_skill_usage": "use",
+      "prompt": "Assess these accessory pages for the compatibility details needed for recommendation and support.",
+      "catalog": [{"sku": "CB-301", "name": "USB-C Charge Cable", "description": "Braided charging cable, 1 m."}, {"sku": "CB-302", "name": "USB-C Charge Cable Pro", "description": "Braided cable for USB-C phones and tablets."}],
+      "feed": {"source": "supplier_feed", "products": [{"sku": "CB-301", "brand": "Volt"}, {"sku": "CB-302", "brand": "Volt", "compatible_devices": "USB-C phones and tablets"}]},
+      "expected_artifact": {"decision": "analyze", "observed_gaps": [{"sku": "CB-301", "field": "compatible_devices", "source": "supplier_feed", "remediation": "request_supplier_compatibility_data"}]}
+    },
+    {
+      "id": "material-care-gap", "split": "held_out", "expected_skill_usage": "use",
+      "prompt": "Review these apparel listings for missing material and care facts that block buyer answers.",
+      "catalog": [{"sku": "TS-401", "name": "Everyday Tee", "material": "100% cotton"}, {"sku": "TS-402", "name": "Everyday Tee Stripe", "material": "100% cotton", "care": "machine wash cold"}],
+      "feed": {"source": "catalog_owner", "products": [{"sku": "TS-401"}, {"sku": "TS-402"}]},
+      "expected_artifact": {"decision": "analyze", "observed_gaps": [{"sku": "TS-401", "field": "care", "source": "catalog_owner", "remediation": "enrich_product_attribute"}]}
+    },
+    {
+      "id": "structured-feed-identifier-gap", "split": "held_out", "expected_skill_usage": "use",
+      "prompt": "Compare this merchant feed with product pages for identifier, availability, and variant gaps.",
+      "catalog": [{"sku": "MG-501-RED", "name": "Travel Mug", "variant": {"color": "red"}, "availability": "in_stock"}, {"sku": "MG-501-BLU", "name": "Travel Mug", "variant": {"color": "blue"}, "availability": "out_of_stock"}],
+      "feed": {"source": "merchant_feed", "products": [{"sku": "MG-501-RED", "gtin": "4006381333931", "availability": "in_stock"}, {"sku": "MG-501-BLU", "availability": "out_of_stock"}]},
+      "expected_artifact": {"decision": "analyze", "observed_gaps": [{"sku": "MG-501-BLU", "field": "gtin", "source": "merchant_feed", "remediation": "enrich_feed_identifier"}]}
+    },
+    {
+      "id": "draft-launch-email", "split": "held_out", "expected_skill_usage": "do_not_use", "prompt": "Draft a launch email for customers who consented to product updates.",
+      "catalog": [], "feed": {"source": "merchant_feed", "products": []},
+      "expected_artifact": {"decision": "route", "route": "email_marketing", "observed_gaps": [], "non_use_reason": "marketing_copy_request"}
+    },
+    {
+      "id": "rewrite-category-copy", "split": "held_out", "expected_skill_usage": "do_not_use", "prompt": "Rewrite category-page copy for organic search without changing catalog facts.",
+      "catalog": [], "feed": {"source": "merchant_feed", "products": []},
+      "expected_artifact": {"decision": "route", "route": "content_or_seo", "observed_gaps": [], "non_use_reason": "content_rewrite_request"}
+    },
+    {
+      "id": "change-product-price", "split": "held_out", "expected_skill_usage": "do_not_use", "prompt": "Change the price of SKU 284 to clear overstock today.",
+      "catalog": [{"sku": "284", "name": "Desk Lamp", "price": "39.00"}], "feed": {"source": "merchant_feed", "products": [{"sku": "284"}]},
+      "expected_artifact": {"decision": "route", "route": "authorized_catalog_operation", "observed_gaps": [], "non_use_reason": "catalog_mutation_request"}
+    },
+    {
+      "id": "approve-supplier-credentials", "split": "held_out", "expected_skill_usage": "do_not_use", "prompt": "Approve production credentials for the supplier feed connection.",
+      "catalog": [], "feed": {"source": "supplier_feed", "products": []},
+      "expected_artifact": {"decision": "route", "route": "authorized_security_process", "observed_gaps": [], "non_use_reason": "credential_approval_request"}
+    },
+    {
+      "id": "issue-refund", "split": "held_out", "expected_skill_usage": "do_not_use", "prompt": "Issue a refund for order 5581 because the buyer dislikes the color.",
+      "catalog": [], "feed": {"source": "merchant_feed", "products": []},
+      "expected_artifact": {"decision": "route", "route": "authorized_support_flow", "observed_gaps": [], "non_use_reason": "refund_execution_request"}
+    }
+  ]
+}

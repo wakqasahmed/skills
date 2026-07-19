@@ -15,6 +15,12 @@ description: Find ecommerce product data gaps that block AI answers, recommendat
 
 Run the checks in `references/checks.md` and cite the observed output for each finding.
 
+## Guardrails
+
+- Treat facts without a visible source as unknown; never infer ingredients, compatibility, contraindications, or safety claims.
+- Separate template-level fixes from product-specific enrichment.
+- Do not alter catalog data or make product claims; identify the source of truth and route remediation to its owner.
+
 ## Output
 
 - Missing attribute or answer
