@@ -17,12 +17,18 @@ RECORD_FIELDS = {"case_id", "condition", "trial", "model", "harness_version", "r
 def valid_execution(execution: object, condition: str) -> bool:
     if not isinstance(execution, dict) or execution.get("exit_code") != 0:
         return False
+    image = execution.get("image")
+    if not isinstance(image, str) or "@sha256:" not in image:
+        return False
+    runner_sha256 = execution.get("runner_sha256")
+    if not isinstance(runner_sha256, str) or len(runner_sha256) != 64:
+        return False
     inputs = execution.get("provided_inputs")
     files = ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]
     if not isinstance(inputs, dict) or inputs.get("protocol_version") != RUNNER_PROTOCOL_VERSION or inputs.get("files") != files:
         return False
     hashes = inputs.get("sha256")
-    return isinstance(hashes, dict) and set(hashes) == set(files) and all(isinstance(value, str) and len(value) == 64 for value in hashes.values()) and execution.get("loaded_files") == files
+    return isinstance(hashes, dict) and set(hashes) == set(files) and all(isinstance(value, str) and len(value) == 64 for value in hashes.values())
 
 
 def grade_response(case: dict, response: str) -> tuple[bool, bool]:

@@ -35,7 +35,7 @@ def records_for(cases: list[dict]) -> list[dict]:
             "model": "test-model",
             "harness_version": "test-harness-1",
             "runner_protocol_version": "readiness-audit-runner/v2",
-            "execution": {"exit_code": 0, "provided_inputs": {"protocol_version": "readiness-audit-runner/v2", "files": ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])], "sha256": {name: "0" * 64 for name in ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]}}, "loaded_files": ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]},
+            "execution": {"exit_code": 0, "image": "runner@sha256:" + "0" * 64, "runner_sha256": "0" * 64, "provided_inputs": {"protocol_version": "readiness-audit-runner/v2", "files": ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])], "sha256": {name: "0" * 64 for name in ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]}}},
             "target_response": passing_response(case),
         }
         for case in cases
@@ -70,6 +70,10 @@ class ReadinessAuditEvalTest(unittest.TestCase):
         failures, _ = validator.validate(records)
         self.assertTrue(any("outcome delta" in failure for failure in failures))
 
+        invalid_execution = dict(records[0]["execution"])
+        invalid_execution.pop("runner_sha256")
+        self.assertFalse(validator.valid_execution(invalid_execution, records[0]["condition"]))
+
         for record in [record for record in records if record["condition"] == "disabled"][:2]:
             record["target_response"] = "wrong"
         with tempfile.TemporaryDirectory() as directory:
@@ -86,10 +90,10 @@ class ReadinessAuditEvalTest(unittest.TestCase):
         case = json.loads(CASES.read_text())["cases"][0]
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
-            harness.prepare_workspace(workspace, HARNESS, case, "enabled")
+            harness.prepare_workspace(workspace, case, "enabled")
             exposed_case = json.loads((workspace / "case.json").read_text())
             input_check = json.loads((workspace / "input-check.json").read_text())
-            command = harness.isolated_command(workspace, "image@sha256:abc", "declared-model", "enabled", 1)
+            command = harness.isolated_command(workspace, Path("/approved/runner"), "image@sha256:abc", "declared-model", "enabled", 1)
             self.assertTrue((workspace / "SKILL.md").is_file())
 
         self.assertEqual(exposed_case, {"id": case["id"], "prompt": case["prompt"]})
@@ -100,9 +104,12 @@ class ReadinessAuditEvalTest(unittest.TestCase):
         self.assertIn("--read-only", command)
         self.assertIn("HARNESS_CONDITION=enabled", command)
         self.assertIn("--case", command)
-        self.assertIn("/workspace/input-check.json", command)
+        self.assertIn("/inputs/input-check.json", command)
+        self.assertIn("HARNESS_FIXTURE=/inputs/fixture.html", command)
         self.assertIn("--skill", command)
-        self.assertIn("HOME=/nonexistent", HARNESS.read_text())
+        self.assertIn("HOME=/nonexistent", command)
+        self.assertIn("target=/runner", " ".join(command))
+        self.assertNotIn("target=/workspace", " ".join(command))
 
     def test_gated_workflow_retains_results(self):
         workflow = WORKFLOW.read_text()
