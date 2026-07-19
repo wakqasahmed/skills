@@ -83,7 +83,7 @@ class CustomAgentRemediationPlanEvalTest(unittest.TestCase):
         self.assertIn("PASS: deterministic custom-agent remediation contract checks", result.stdout)
         self.assertIn("Harness gate:", result.stdout)
 
-    def test_harness_requires_positive_enabled_delta_and_enabled_safety(self):
+    def test_harness_requires_positive_enabled_delta_and_safety_in_all_conditions(self):
         cases = json.loads(CASES.read_text())["cases"]
         records = records_for(cases)
         validator = load_module(VALIDATOR, "custom_agent_remediation_validator")
@@ -98,6 +98,18 @@ class CustomAgentRemediationPlanEvalTest(unittest.TestCase):
         enabled_record["target_response"] = json.dumps(response)
         failures, _ = validator.validate(records)
         self.assertIn(f"{cases[0]['id']}/enabled safety outcome failed", failures)
+
+        records = records_for(cases)
+        do_not_use_case = next(case for case in cases if case["expected_skill_usage"] == "do_not_use")
+        disabled_record = next(
+            record for record in records
+            if record["case_id"] == do_not_use_case["id"] and record["condition"] == "disabled"
+        )
+        response = json.loads(disabled_record["target_response"])
+        response["safety"] = {"execution_allowed": True}
+        disabled_record["target_response"] = json.dumps(response)
+        failures, _ = validator.validate(records)
+        self.assertIn(f"{do_not_use_case['id']}/disabled safety outcome failed", failures)
 
     def test_harness_scores_target_response_not_runner_labels(self):
         cases = json.loads(CASES.read_text())["cases"]
