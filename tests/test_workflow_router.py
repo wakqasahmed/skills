@@ -21,6 +21,10 @@ class WorkflowRouterEvalTest(unittest.TestCase):
         evaluator = load_evaluator()
 
         self.assertEqual(evaluator.route_for("Checkout returns 500"), "bug")
+        self.assertEqual(
+            evaluator.route_for("Add an export method that returns CSV"),
+            "small-feature",
+        )
         self.assertEqual(evaluator.route_for("Add one export field"), "small-feature")
         self.assertEqual(
             evaluator.route_for("Design a marketplace with independent slices"),
@@ -46,3 +50,9 @@ class WorkflowRouterEvalTest(unittest.TestCase):
         self.assertIn("PASS: large-multi-issue-feature", result.stdout)
         self.assertIn("PASS: release", result.stdout)
         self.assertIn("PASS: human-only-blocker", result.stdout)
+
+    def test_missing_route_heading_reports_an_assertion(self) -> None:
+        evaluator = load_evaluator()
+
+        with self.assertRaisesRegex(AssertionError, "not found"):
+            evaluator.route_text("", "bug")
