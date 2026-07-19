@@ -1,0 +1,43 @@
+name: Readiness audit outcome eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated readiness-audit harness
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readiness-audit-outcome-eval
+  cancel-in-progress: true
+
+jobs:
+  outcome-harness:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 skills/agentic-commerce/readiness-audit/eval/run.py
+      - name: Run repository-controlled isolated harness
+        env:
+          READINESS_AUDIT_EVAL_RUNNER: ${{ vars.READINESS_AUDIT_EVAL_RUNNER }}
+          READINESS_AUDIT_EVAL_IMAGE: ${{ vars.READINESS_AUDIT_EVAL_IMAGE }}
+          READINESS_AUDIT_EVAL_MODEL: ${{ vars.READINESS_AUDIT_EVAL_MODEL }}
+        run: |
+          test -n "$READINESS_AUDIT_EVAL_RUNNER"
+          test -n "$READINESS_AUDIT_EVAL_IMAGE"
+          test -n "$READINESS_AUDIT_EVAL_MODEL"
+          python3 skills/agentic-commerce/readiness-audit/eval/run_harness.py --runner "$READINESS_AUDIT_EVAL_RUNNER" --image "$READINESS_AUDIT_EVAL_IMAGE" --model "$READINESS_AUDIT_EVAL_MODEL" --trials 5 --output readiness-audit-results.json
+          python3 skills/agentic-commerce/readiness-audit/eval/validate-harness-results.py --results readiness-audit-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: readiness-audit-outcome-eval-${{ github.run_id }}
+          path: readiness-audit-results.json
+          if-no-files-found: error
