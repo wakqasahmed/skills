@@ -1,5 +1,7 @@
 import importlib.util
 import json
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,7 +16,87 @@ governance = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(governance)
 
 
+def run_governance_gate(pr, review_comments=(), issue_comments=()):
+    with tempfile.TemporaryDirectory() as directory:
+        directory = Path(directory)
+        paths = {
+            "review_comments": directory / "review-comments.json",
+            "issue_comments": directory / "issue-comments.json",
+            "pr_commits": directory / "pr-commits.json",
+            "pr": directory / "pr.json",
+            "legacy_agent_labels": directory / "legacy-agent-labels.json",
+        }
+        inputs = {
+            "review_comments": list(review_comments),
+            "issue_comments": list(issue_comments),
+            "pr_commits": [],
+            "pr": pr,
+            "legacy_agent_labels": [],
+        }
+        for name, path in paths.items():
+            path.write_text(json.dumps(inputs[name]))
+
+        return subprocess.run(
+            [
+                "python3",
+                str(SCRIPT),
+                "--head-sha", "latest",
+                "--review-comments", str(paths["review_comments"]),
+                "--issue-comments", str(paths["issue_comments"]),
+                "--pr-commits", str(paths["pr_commits"]),
+                "--pr", str(paths["pr"]),
+                "--legacy-agent-labels", str(paths["legacy_agent_labels"]),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+
 class OcrDispositionTests(unittest.TestCase):
+    def test_gate_rejects_unsafe_public_output(self):
+        safe_pr = {
+            "body": "\n".join([
+                "- Resolved model ID: gpt5.6-terra",
+                "- Metadata limitation: N/A",
+                "- Verified agent labels: N/A",
+                "- Legacy agent labels: N/A",
+            ]),
+            "labels": [],
+        }
+
+        for public_input in (
+            {"pr": {**safe_pr, "body": f"{safe_pr['body']}\nCredential: /tmp/credentials.json"}},
+            {"review_comments": [{"body": "Credential: /tmp/credentials.json"}]},
+            {"issue_comments": [{"body": "Credential: /tmp/credentials.json"}]},
+        ):
+            result = run_governance_gate(
+                public_input.get("pr", safe_pr),
+                public_input.get("review_comments", []),
+                public_input.get("issue_comments", []),
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Public output contains a local credential-file path", result.stdout)
+
+    def test_gate_accepts_safe_public_output(self):
+        result = run_governance_gate(
+            {
+                "body": "\n".join([
+                    "- Resolved model ID: gpt5.6-terra",
+                    "- Metadata limitation: N/A",
+                    "- Verified agent labels: N/A",
+                    "- Legacy agent labels: N/A",
+                    "Credential: [redacted]",
+                ]),
+                "labels": [],
+            },
+            [{"body": "Token location: [redacted]"}],
+            [{"body": "Credential: [redacted]"}],
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
     def test_public_output_rejects_local_credential_file_paths(self):
         fixture = json.loads((FIXTURES / "public-output.json").read_text())
 

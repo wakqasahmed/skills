@@ -28,6 +28,13 @@ def validate_public_output(output):
     return []
 
 
+def validate_public_outputs(pr, review_comments, issue_comments):
+    outputs = [pr.get("body") or ""]
+    outputs.extend(comment.get("body") or "" for comment in review_comments)
+    outputs.extend(comment.get("body") or "" for comment in issue_comments)
+    return validate_public_output("\n".join(outputs))
+
+
 def ocr_findings(head_sha, review_comments):
     return [
         comment
@@ -191,15 +198,19 @@ def main():
     parser.add_argument("--resolved-model-id")
     args = parser.parse_args()
 
-    failures = validate_ocr_dispositions(
+    review_comments = read_json(args.review_comments)
+    issue_comments = read_json(args.issue_comments)
+    pr = read_json(args.pr)
+    failures = validate_public_outputs(pr, review_comments, issue_comments)
+    failures.extend(validate_ocr_dispositions(
         args.head_sha,
-        read_json(args.review_comments),
-        read_json(args.issue_comments),
+        review_comments,
+        issue_comments,
         read_json(args.pr_commits),
-    )
+    ))
     failures.extend(validate_agent_labels(args.new_agent_label, args.resolved_model_id))
     failures.extend(validate_pr_agent_metadata(
-        read_json(args.pr),
+        pr,
         read_json(args.legacy_agent_labels),
     ))
     if failures:
