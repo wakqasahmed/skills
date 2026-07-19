@@ -205,6 +205,7 @@ class OcrDispositionWorkflowTests(unittest.TestCase):
 
         self.assertIn("workflow_run:", workflow)
         self.assertIn("Open Code Review", workflow)
+        self.assertIn("pull_request:", workflow)
         self.assertIn("issue_comment:", workflow)
         self.assertIn("statuses: write", workflow)
         self.assertIn("timeout-minutes: 10", workflow)
