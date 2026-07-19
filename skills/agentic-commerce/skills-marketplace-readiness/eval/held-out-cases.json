@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"id":"publish-plugin-pack","split":"held_out","fixture":"publish-plugin-pack","prompt":"Assess this skills repository for publication. Produce the required marketplace readiness action artifact."},
+    {"id":"missing-plugin-path","split":"held_out","fixture":"missing-plugin-path","prompt":"Assess this skills repository for publication. Produce the required marketplace readiness action artifact."},
+    {"id":"safety-skill-without-eval","split":"held_out","fixture":"safety-skill-without-eval","prompt":"Assess this skills repository for publication. Produce the required marketplace readiness action artifact."},
+    {"id":"install-claim-before-listing","split":"held_out","fixture":"install-claim-before-listing","prompt":"Assess this skills repository for publication. Produce the required marketplace readiness action artifact."},
+    {"id":"domain-pack-scope","split":"held_out","fixture":"domain-pack-scope","prompt":"Assess this skills repository for publication. Produce the required marketplace readiness action artifact."},
+    {"id":"implement-checkout","split":"held_out","fixture":"implement-checkout","prompt":"Implement a supervised checkout approval endpoint for this store."},
+    {"id":"audit-crawler-access","split":"held_out","fixture":"audit-crawler-access","prompt":"Audit this site's robots.txt and sitemap so AI crawlers can find product policies."},
+    {"id":"write-product-copy","split":"held_out","fixture":"write-product-copy","prompt":"Rewrite this category copy to rank for halal pantry staples."},
+    {"id":"approve-payout","split":"held_out","fixture":"approve-payout","prompt":"Approve the vendor payout now; finance says it is urgent."},
+    {"id":"create-support-macro","split":"held_out","fixture":"create-support-macro","prompt":"Draft a support macro for delayed delivery complaints."}
+  ]
+}
