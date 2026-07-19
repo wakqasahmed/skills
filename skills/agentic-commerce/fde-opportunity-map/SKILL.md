@@ -19,3 +19,9 @@ description: Identify when an ecommerce prospect needs Forward Deployed Engineer
 - Required systems and owners
 - Smallest useful FDE scope
 - Verification and rollback path
+
+## Guardrails
+
+- Recommend FDE only when a verified custom integration or workflow constraint exceeds configuration of the standard custom-agent setup.
+- Do not present a discovery finding as an approved integration, data contract, production access, or authorization to change an operational system.
+- Define the smallest reversible sprint with named system owners, approval gates, success evidence, and a rollback path before proposing delivery.
