@@ -1,0 +1,50 @@
+name: FDE opportunity-map harness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated evaluator
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: fde-opportunity-map-harness
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 skills/agentic-commerce/fde-opportunity-map/eval/run.py
+      - name: Run approved isolated FDE evaluator
+        env:
+          FDE_OPPORTUNITY_MAP_EVAL_RUNNER: ${{ vars.FDE_OPPORTUNITY_MAP_EVAL_RUNNER }}
+          FDE_OPPORTUNITY_MAP_EVAL_IMAGE: ${{ vars.FDE_OPPORTUNITY_MAP_EVAL_IMAGE }}
+          FDE_OPPORTUNITY_MAP_EVAL_MODEL: ${{ vars.FDE_OPPORTUNITY_MAP_EVAL_MODEL }}
+        run: |
+          test -n "$FDE_OPPORTUNITY_MAP_EVAL_RUNNER"
+          test -n "$FDE_OPPORTUNITY_MAP_EVAL_IMAGE"
+          test -n "$FDE_OPPORTUNITY_MAP_EVAL_MODEL"
+          case "$FDE_OPPORTUNITY_MAP_EVAL_RUNNER" in ./*) ;; *) exit 1 ;; esac
+          python3 skills/agentic-commerce/fde-opportunity-map/eval/run_harness.py \
+            --runner "$FDE_OPPORTUNITY_MAP_EVAL_RUNNER" \
+            --image "$FDE_OPPORTUNITY_MAP_EVAL_IMAGE" \
+            --model "$FDE_OPPORTUNITY_MAP_EVAL_MODEL" \
+            --trials 5 \
+            --output fde-opportunity-map-results.json
+          python3 skills/agentic-commerce/fde-opportunity-map/eval/validate-harness-results.py \
+            --results fde-opportunity-map-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fde-opportunity-map-harness-${{ github.run_id }}
+          path: fde-opportunity-map-results.json
+          if-no-files-found: error
