@@ -97,6 +97,25 @@ class OcrDispositionTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout)
 
+    def test_gate_ignores_automated_review_text(self):
+        result = run_governance_gate(
+            {
+                "body": "\n".join([
+                    "- Resolved model ID: gpt5.6-terra",
+                    "- Metadata limitation: N/A",
+                    "- Verified agent labels: N/A",
+                    "- Legacy agent labels: N/A",
+                ]),
+                "labels": [],
+            },
+            [{
+                "user": {"login": "github-actions[bot]"},
+                "body": "Credential: /tmp/credentials.json",
+            }],
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
     def test_public_output_rejects_local_credential_file_paths(self):
         fixture = json.loads((FIXTURES / "public-output.json").read_text())
 

@@ -30,8 +30,12 @@ def validate_public_output(output):
 
 def validate_public_outputs(pr, review_comments, issue_comments):
     outputs = [pr.get("body") or ""]
-    outputs.extend(comment.get("body") or "" for comment in review_comments)
-    outputs.extend(comment.get("body") or "" for comment in issue_comments)
+    comments = [*review_comments, *issue_comments]
+    outputs.extend(
+        comment.get("body") or ""
+        for comment in comments
+        if comment.get("user", {}).get("login") != "github-actions[bot]"
+    )
     return validate_public_output("\n".join(outputs))
 
 
