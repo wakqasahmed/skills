@@ -14,6 +14,9 @@ ROLE_LABEL_RE = re.compile(r"^agent:(.+)-(low|medium|high)-(implementer|reviewer
 AUTHORIZED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
 RESOLVED_MODEL_RE = re.compile(r"^\s*- Resolved model ID:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 METADATA_LIMITATION_RE = re.compile(r"^\s*- Metadata limitation:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+VERIFIED_AGENT_LABELS_RE = re.compile(r"^\s*- Verified agent labels:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+LEGACY_AGENT_LABELS_RE = re.compile(r"^\s*- Legacy agent labels:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+OCR_GATE_CONTEXT = "OCR disposition gate"
 
 
 def ocr_findings(head_sha, review_comments):
@@ -95,11 +98,20 @@ def validate_agent_labels(labels, resolved_model_id=None):
     return failures
 
 
+def recorded_labels(match):
+    if not match or match.group(1).strip().lower() == "n/a":
+        return set()
+    return {label.strip() for label in match.group(1).split(",") if label.strip()}
+
+
 def validate_pr_agent_metadata(pr):
     labels = [label["name"] for label in pr.get("labels", [])]
     body = pr.get("body") or ""
     model_match = RESOLVED_MODEL_RE.search(body)
     limitation_match = METADATA_LIMITATION_RE.search(body)
+    verified_labels = recorded_labels(VERIFIED_AGENT_LABELS_RE.search(body))
+    legacy_labels = recorded_labels(LEGACY_AGENT_LABELS_RE.search(body))
+    actual_agent_labels = {label for label in labels if label.startswith("agent:")}
 
     if not model_match:
         return ["PR is missing the resolved model ID record"]
@@ -108,11 +120,31 @@ def validate_pr_agent_metadata(pr):
     if resolved_model_id.lower() == "unavailable":
         if not limitation_match or limitation_match.group(1).lower() in {"n/a", "unavailable"}:
             return ["PR with unavailable model ID needs a metadata limitation"]
-        return validate_agent_labels(labels)
-
-    if not limitation_match or limitation_match.group(1).lower() != "n/a":
+    elif not limitation_match or limitation_match.group(1).lower() != "n/a":
         return ["PR with a resolved model ID must record Metadata limitation: N/A"]
-    return validate_agent_labels(labels, resolved_model_id)
+
+    current_model_id = None if resolved_model_id.lower() == "unavailable" else resolved_model_id
+    failures = validate_agent_labels(verified_labels, current_model_id)
+    recorded_agent_labels = verified_labels | legacy_labels
+    for label in sorted(actual_agent_labels - recorded_agent_labels):
+        failures.append(f"Unverified agent label: {label}")
+    return failures
+
+
+def validate_required_status_check_policy(rulesets):
+    for ruleset in rulesets:
+        if ruleset.get("enforcement") != "active":
+            continue
+        ref_name = ruleset.get("conditions", {}).get("ref_name", {})
+        if "~DEFAULT_BRANCH" not in ref_name.get("include", []):
+            continue
+        for rule in ruleset.get("rules", []):
+            if rule.get("type") != "required_status_checks":
+                continue
+            checks = rule.get("parameters", {}).get("required_status_checks", [])
+            if any(check.get("context") == OCR_GATE_CONTEXT for check in checks):
+                return []
+    return [f"Default branch must require {OCR_GATE_CONTEXT}"]
 
 
 def read_json(path):
