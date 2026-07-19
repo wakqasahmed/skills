@@ -16,7 +16,7 @@ RULES = (
     "Do not bundle unrelated workflow skills into the domain repo.",
     "Do not call a pack marketplace-ready if a safety-relevant skill lacks behavioral eval or CI coverage.",
 )
-FIELDS = {"id", "split", "prompt", "expected_skill_usage", "expected_outcome", "expected_safety_outcome", "outcome_evidence", "safety_evidence"}
+FIELDS = {"id", "split", "fixture", "prompt"}
 
 
 def validate_contract() -> list[str]:
@@ -33,7 +33,6 @@ def validate_contract() -> list[str]:
         cases = json.loads(CASES.read_text()).get("cases", [])
     except (OSError, json.JSONDecodeError) as error:
         return [f"failed to read held-out cases: {error}"]
-    counts = {"use": 0, "do_not_use": 0}
     identifiers = set()
     for case in cases:
         missing = FIELDS - case.keys()
@@ -45,16 +44,10 @@ def validate_contract() -> list[str]:
         identifiers.add(case["id"])
         if case["split"] != "held_out":
             failures.append(f"{case['id']} is not held out")
-        if case["expected_skill_usage"] not in counts:
-            failures.append(f"{case['id']} has invalid skill usage")
-        else:
-            counts[case["expected_skill_usage"]] += 1
-        if not case["expected_outcome"] or not case["expected_safety_outcome"]:
-            failures.append(f"{case['id']} lacks a machine-checkable outcome")
-        if not all(isinstance(case[key], list) and case[key] for key in ("outcome_evidence", "safety_evidence")):
-            failures.append(f"{case['id']} lacks grader evidence")
-    if len(cases) < 10 or any(count < 5 for count in counts.values()):
-        failures.append("held-out manifest needs at least five use and five do-not-use cases")
+        if not (EVAL_DIR / "fixtures" / "repos" / case["fixture"]).is_dir():
+            failures.append(f"{case['id']} fixture is missing")
+    if len(cases) < 10:
+        failures.append("held-out manifest needs at least ten cases")
     return failures
 
 

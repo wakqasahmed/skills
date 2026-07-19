@@ -26,16 +26,12 @@ jobs:
       - run: python3 skills/agentic-commerce/skills-marketplace-readiness/eval/run.py
       - name: Run approved isolated marketplace readiness evaluator
         env:
-          SKILLS_MARKETPLACE_READINESS_EVAL_RUNNER: ${{ vars.SKILLS_MARKETPLACE_READINESS_EVAL_RUNNER }}
           SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE: ${{ vars.SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE }}
           SKILLS_MARKETPLACE_READINESS_EVAL_MODEL: ${{ vars.SKILLS_MARKETPLACE_READINESS_EVAL_MODEL }}
         run: |
-          test -n "$SKILLS_MARKETPLACE_READINESS_EVAL_RUNNER"
           test -n "$SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE"
           test -n "$SKILLS_MARKETPLACE_READINESS_EVAL_MODEL"
-          case "$SKILLS_MARKETPLACE_READINESS_EVAL_RUNNER" in ./*) ;; *) exit 1 ;; esac
           python3 skills/agentic-commerce/skills-marketplace-readiness/eval/run_harness.py \
-            --runner "$SKILLS_MARKETPLACE_READINESS_EVAL_RUNNER" \
             --image "$SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE" \
             --model "$SKILLS_MARKETPLACE_READINESS_EVAL_MODEL" \
             --trials 5 \
