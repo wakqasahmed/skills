@@ -44,3 +44,15 @@ An agent that wrote the code cannot judge its own intent objectively. A fresh re
 - If the reviewer finds a real defect, fix it before merge — do not merge on "mostly fine."
 - Never skip the preflight or PR review step because the diff looks small. Skip subagent overhead only when the change is trivial by the project's own non-trivial-PR definition.
 - Every subagent prompt must include the bail-out contract: if the subagent cannot finish (context exhaustion, blocked dependency, session limit), it writes a `handover`, posts it to the issue, and adds the `paused by agent` label instead of stopping silently.
+
+## Outcome evaluation
+
+The deterministic checks in `eval/` protect this skill's written contract and
+the schema of synthetic held-out cases. They do not score whether merely
+loading this skill changed an agent response.
+
+Use the approved isolated harness described in `eval/README.md` to compare
+user-visible outcomes and safety outcomes with the skill enabled versus disabled.
+Retain the skill only when its enabled condition clears the stated
+threshold, improves the aggregate outcome rate, and has no safety regression;
+otherwise investigate or retire the skill.
