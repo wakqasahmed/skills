@@ -1,0 +1,10 @@
+{
+  "head_sha": "latest",
+  "review_comments": [
+    {"id": 31, "commit_id": "latest", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-blocking -->\nBlocking: acceptance criterion is not met."}
+  ],
+  "issue_comments": [
+    {"author_association": "MEMBER", "body": "<!-- ocr-disposition:31 -->\nDisposition: declined\nReason: The requested behavior is outside this issue."}
+  ],
+  "pr_commits": [{"sha": "latest"}]
+}
