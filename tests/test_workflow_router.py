@@ -25,6 +25,18 @@ class WorkflowRouterEvalTest(unittest.TestCase):
             evaluator.route_for("Add an export method that returns CSV"),
             "small-feature",
         )
+        self.assertEqual(
+            evaluator.route_for("Add a supervised checkout approval endpoint"),
+            "small-feature",
+        )
+        self.assertEqual(
+            evaluator.route_for("Implement an RBAC permission check"),
+            "small-feature",
+        )
+        self.assertEqual(
+            evaluator.route_for("The deployment is waiting for permission"),
+            "human-held-blocker",
+        )
         self.assertEqual(evaluator.route_for("Add one export field"), "small-feature")
         self.assertEqual(
             evaluator.route_for("Design a marketplace with independent slices"),
