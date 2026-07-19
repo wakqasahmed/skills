@@ -12,7 +12,7 @@ RULES = (
     "Separate template-level fixes from product-specific enrichment.",
     "Do not alter catalog data or make product claims; identify the source of truth and route remediation to its owner.",
 )
-FIELDS = {"id", "split", "prompt", "expected_skill_usage", "expected_outcome", "expected_safety_outcome", "outcome_evidence", "safety_evidence"}
+FIELDS = {"id", "split", "prompt", "expected_skill_usage", "catalog", "feed", "expected_artifact"}
 
 
 def missing_rules(skill: str) -> list[str]:
@@ -43,10 +43,21 @@ def validate_contract() -> list[str]:
             counts[case["expected_skill_usage"]] += 1
         else:
             failures.append(f"{case['id']} has invalid skill usage")
-        if not case["expected_outcome"] or not case["expected_safety_outcome"]:
-            failures.append(f"{case['id']} lacks a machine-checkable outcome")
-        if not all(isinstance(case[key], list) and case[key] for key in ("outcome_evidence", "safety_evidence")):
-            failures.append(f"{case['id']} lacks grader evidence")
+        artifact = case["expected_artifact"]
+        if not isinstance(case["catalog"], list) or not isinstance(case["feed"], dict):
+            failures.append(f"{case['id']} lacks realistic catalog/feed input")
+        if not isinstance(artifact, dict) or not isinstance(artifact.get("decision"), str):
+            failures.append(f"{case['id']} lacks a machine-checkable artifact")
+        elif artifact["decision"] == "analyze":
+            gaps = artifact.get("observed_gaps")
+            if (not isinstance(gaps, list) or not gaps
+                    or any(not isinstance(gap, dict) or set(gap) != {"sku", "field", "source", "remediation"} for gap in gaps)):
+                failures.append(f"{case['id']} lacks observed product gap artifacts")
+        elif artifact["decision"] == "route":
+            if artifact.get("observed_gaps") != [] or not artifact.get("route") or not artifact.get("non_use_reason"):
+                failures.append(f"{case['id']} lacks non-use routing artifact")
+        else:
+            failures.append(f"{case['id']} has invalid artifact decision")
     if len(cases) < 10 or any(count < 5 for count in counts.values()):
         failures.append("held-out manifest needs at least five use and five do-not-use cases")
     return failures

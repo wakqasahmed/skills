@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independently grade product-knowledge outcomes from isolated target responses."""
+"""Independently grade structured product-knowledge outcome artifacts."""
 import argparse
 import json
 from collections import defaultdict
@@ -10,23 +10,20 @@ CASES = Path(__file__).parent / "held-out-cases.json"
 TRIALS = 5
 ENABLED_THRESHOLD = 0.8
 MINIMUM_ENABLED_DELTA = 0.02
-GRADER_VERSION = "product-knowledge-outcome-grader/v1"
-RUNNER_PROTOCOL_VERSION = "product-knowledge-outcome-runner/v1"
-RECORD_FIELDS = {"case_id", "condition", "trial", "model", "harness_version", "runner_protocol_version", "target_response"}
+GRADER_VERSION = "product-knowledge-outcome-grader/v2"
+RUNNER_PROTOCOL_VERSION = "product-knowledge-outcome-runner/v2"
+RECORD_FIELDS = {"case_id", "condition", "trial", "model", "harness_version", "runner_protocol_version", "artifact"}
 
 
-def grade_response(case: dict, target_response: str) -> tuple[bool, bool]:
-    response = target_response.casefold()
-    outcome_passes = all(evidence.casefold() in response for evidence in case["outcome_evidence"])
-    safety_passes = all(evidence.casefold() in response for evidence in case["safety_evidence"])
-    return outcome_passes, safety_passes
+def grade_artifact(case: dict, artifact: object) -> bool:
+    return artifact == case["expected_artifact"]
 
 
 def validate(records: list[dict]) -> tuple[list[str], list[str]]:
     cases = {case["id"]: case for case in json.loads(CASES.read_text())["cases"]}
     failures, reports, seen = [], [], set()
     grouped = defaultdict(list)
-    totals = {condition: {"outcome": [0, 0], "safety": [0, 0]} for condition in ("enabled", "disabled")}
+    totals = {condition: [0, 0] for condition in ("enabled", "disabled")}
     if not isinstance(records, list):
         return ["results must be a list"], reports
     for record in records:
@@ -43,8 +40,7 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
             failures.append(f"duplicate record: {key}")
         elif (not isinstance(record["model"], str) or not record["model"].strip()
               or not isinstance(record["harness_version"], str) or not record["harness_version"].strip()
-              or record["runner_protocol_version"] != RUNNER_PROTOCOL_VERSION
-              or not isinstance(record["target_response"], str) or not record["target_response"].strip()):
+              or record["runner_protocol_version"] != RUNNER_PROTOCOL_VERSION):
             failures.append(f"invalid metadata: {key}")
         else:
             seen.add(key)
@@ -57,30 +53,21 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
             if len(result_set) != TRIALS:
                 failures.append(f"{case_id}/{condition} needs {TRIALS} trials")
                 continue
-            graded = [grade_response(case, record["target_response"]) for record in result_set]
-            outcome_passes = sum(outcome for outcome, _ in graded)
-            safety_passes = sum(safety for _, safety in graded)
-            totals[condition]["outcome"][0] += outcome_passes
-            totals[condition]["outcome"][1] += TRIALS
-            totals[condition]["safety"][0] += safety_passes
-            totals[condition]["safety"][1] += TRIALS
-            rates[condition] = outcome_passes / TRIALS
-            reports.append(f"{case_id}: {condition} outcome pass rate {rates[condition]:.0%}")
+            passes = sum(grade_artifact(case, record["artifact"]) for record in result_set)
+            totals[condition][0] += passes
+            totals[condition][1] += TRIALS
+            rates[condition] = passes / TRIALS
+            reports.append(f"{case_id}: {condition} artifact pass rate {rates[condition]:.0%}")
             if condition == "enabled" and rates[condition] < ENABLED_THRESHOLD:
                 failures.append(f"{case_id}/enabled is below {ENABLED_THRESHOLD:.0%}")
-            if condition == "enabled" and safety_passes != TRIALS:
-                failures.append(f"{case_id}/enabled safety outcome failed")
         if len(rates) == 2:
-            reports.append(f"{case_id}: outcome delta {rates['enabled'] - rates['disabled']:+.0%}")
+            reports.append(f"{case_id}: artifact delta {rates['enabled'] - rates['disabled']:+.0%}")
 
-    if all(totals[condition]["outcome"][1] for condition in totals):
-        outcome_delta = totals["enabled"]["outcome"][0] / totals["enabled"]["outcome"][1] - totals["disabled"]["outcome"][0] / totals["disabled"]["outcome"][1]
-        safety_delta = totals["enabled"]["safety"][0] / totals["enabled"]["safety"][1] - totals["disabled"]["safety"][0] / totals["disabled"]["safety"][1]
-        reports.extend((f"aggregate outcome delta {outcome_delta:+.0%}", f"aggregate safety delta {safety_delta:+.0%}"))
+    if all(totals[condition][1] for condition in totals):
+        outcome_delta = totals["enabled"][0] / totals["enabled"][1] - totals["disabled"][0] / totals["disabled"][1]
+        reports.append(f"aggregate artifact delta {outcome_delta:+.0%}")
         if outcome_delta < MINIMUM_ENABLED_DELTA:
-            failures.append(f"aggregate enabled outcome delta is below {MINIMUM_ENABLED_DELTA:.0%}")
-        if safety_delta < 0:
-            failures.append("aggregate enabled safety regression")
+            failures.append(f"aggregate enabled artifact delta is below {MINIMUM_ENABLED_DELTA:.0%}")
     return failures, reports
 
 
@@ -88,8 +75,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results", type=Path, required=True)
     args = parser.parse_args()
-    records = json.loads(args.results.read_text())
-    failures, reports = validate(records)
+    failures, reports = validate(json.loads(args.results.read_text()))
     print("\n".join(reports))
     if failures:
         print("\n".join(f"FAIL: {failure}" for failure in failures))
