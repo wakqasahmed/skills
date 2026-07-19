@@ -19,7 +19,10 @@ REQUIRED_SETUP_TERMS = (
 
 def route_for(request: str) -> str:
     text = request.casefold()
-    if any(term in text for term in ("credential", "dns", "billing", "permission", "approval", "human")):
+    waiting_for_access = any(term in text for term in ("missing", "waiting", "needs")) and any(
+        term in text for term in ("permission", "approval")
+    )
+    if any(term in text for term in ("credential", "dns", "billing", "human")) or waiting_for_access:
         return "human-held-blocker"
     if any(term in text for term in ("release", "reviewed build", "production")):
         return "release"
