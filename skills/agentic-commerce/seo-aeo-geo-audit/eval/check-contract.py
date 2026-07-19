@@ -6,6 +6,7 @@ from pathlib import Path
 EVAL_DIR = Path(__file__).resolve().parent
 SKILL = EVAL_DIR.parent / "SKILL.md"
 CASES = EVAL_DIR / "held-out-cases.json"
+TARGET_AGENT = EVAL_DIR / "run_target_agent.py"
 REQUIRED_SKILL_TEXT = (
     "cite the observed output for each finding",
     "Do not present an unverified crawl, schema, or content inference as an observed finding.",
@@ -15,6 +16,10 @@ REQUIRED_SKILL_TEXT = (
 
 def validate_contract() -> list[str]:
     failures = []
+    if not TARGET_AGENT.is_file():
+        failures.append("missing repository target-agent runner")
+    elif "expected" in TARGET_AGENT.read_text():
+        failures.append("target-agent runner must not receive outcome labels")
     skill = SKILL.read_text()
     for text in REQUIRED_SKILL_TEXT:
         if text not in skill:

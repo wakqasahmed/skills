@@ -10,6 +10,7 @@ EVAL_DIR = ROOT / "skills" / "agentic-commerce" / "seo-aeo-geo-audit" / "eval"
 CASES = EVAL_DIR / "held-out-cases.json"
 CONTRACT = EVAL_DIR / "check-contract.py"
 HARNESS = EVAL_DIR / "run_harness.py"
+TARGET_AGENT = EVAL_DIR / "run_target_agent.py"
 VALIDATOR = EVAL_DIR / "validate-harness-results.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "seo-aeo-geo-audit-harness.yml"
 
@@ -39,6 +40,7 @@ def records_for(cases: list[dict]) -> list[dict]:
         "case_id": case["id"], "condition": condition, "trial": trial,
         "model": "test-model", "harness_version": "test-harness",
         "runner_protocol_version": "seo-aeo-geo-artifact-runner/v1",
+        "skill_used": condition == "enabled" and case["expected_skill_usage"] == "use",
         "audit_artifact": artifact_for(case),
     } for case in cases for condition in ("enabled", "disabled") for trial in range(1, 6)]
 
@@ -81,16 +83,45 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("aggregate artifact outcome delta", result.stdout)
 
+    def test_validator_requires_correct_skill_use_for_each_condition(self):
+        validator = load_module(VALIDATOR, "seo_skill_use_validator")
+        cases = json.loads(CASES.read_text())["cases"]
+        records = records_for(cases)
+        next(record for record in records if record["case_id"] == "copy-rewrite" and record["condition"] == "enabled")["skill_used"] = True
+        next(record for record in records if record["case_id"] == "canonical-and-sitemap" and record["condition"] == "disabled")["skill_used"] = True
+        failures, _ = validator.validate(records)
+        self.assertTrue(any("skill_used" in failure for failure in failures))
+
+    def test_repository_target_agent_uses_only_workspace_inputs(self):
+        target_agent = load_module(TARGET_AGENT, "seo_target_agent")
+        validator = load_module(VALIDATOR, "seo_target_agent_validator")
+        cases = json.loads(CASES.read_text())["cases"]
+        audit_case = next(case for case in cases if case["id"] == "canonical-and-sitemap")
+        route_case = next(case for case in cases if case["id"] == "copy-rewrite")
+        self.assertNotIn("expected", TARGET_AGENT.read_text())
+        self.assertTrue(target_agent.run(audit_case["prompt"], audit_case["input"], "enabled")["skill_used"])
+        self.assertFalse(target_agent.run(audit_case["prompt"], audit_case["input"], "disabled")["skill_used"])
+        self.assertFalse(target_agent.run(route_case["prompt"], route_case["input"], "enabled")["skill_used"])
+        for case in cases:
+            enabled = target_agent.run(case["prompt"], case["input"], "enabled")
+            disabled = target_agent.run(case["prompt"], case["input"], "disabled")
+            should_use = case["expected_skill_usage"] == "use"
+            self.assertEqual(enabled["skill_used"], should_use)
+            self.assertFalse(disabled["skill_used"])
+            if should_use:
+                self.assertTrue(validator.grade_artifact(case, enabled["audit_artifact"]))
+
     def test_isolated_harness_only_exposes_inputs_and_enabled_skill(self):
         harness = load_module(HARNESS, "seo_isolation_harness")
         case = json.loads(CASES.read_text())["cases"][0]
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
-            harness.prepare_workspace(workspace, HARNESS, case, "enabled")
+            harness.prepare_workspace(workspace, case, "enabled")
             exposed = json.loads((workspace / "case.json").read_text())
             self.assertEqual(exposed, {"id": case["id"], "prompt": case["prompt"], "input": case["input"]})
             self.assertTrue((workspace / "SKILL.md").is_file())
             self.assertTrue((workspace / "checks.md").is_file())
+            self.assertFalse(any("expected" in path.read_text() for path in workspace.iterdir() if path.is_file()))
         command = harness.isolated_command(Path("/tmp/seo-eval"), "image@sha256:abc", "declared-model", "enabled", 1)
         self.assertIn("--network", command)
         self.assertIn("none", command)
@@ -105,3 +136,5 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         self.assertIn("concurrency:", workflow)
         self.assertIn("upload-artifact", workflow)
         self.assertIn("seo-aeo-geo-audit-results.json", workflow)
+        self.assertIn("run_target_agent.py", workflow)
+        self.assertNotIn("SEO_AEO_GEO_AUDIT_EVAL_RUNNER", workflow)

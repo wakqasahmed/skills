@@ -26,15 +26,13 @@ jobs:
       - run: python3 skills/agentic-commerce/seo-aeo-geo-audit/eval/check-contract.py
       - name: Run approved isolated evaluator
         env:
-          SEO_AEO_GEO_AUDIT_EVAL_RUNNER: ${{ vars.SEO_AEO_GEO_AUDIT_EVAL_RUNNER }}
           SEO_AEO_GEO_AUDIT_EVAL_IMAGE: ${{ vars.SEO_AEO_GEO_AUDIT_EVAL_IMAGE }}
           SEO_AEO_GEO_AUDIT_EVAL_MODEL: ${{ vars.SEO_AEO_GEO_AUDIT_EVAL_MODEL }}
         run: |
-          test -n "$SEO_AEO_GEO_AUDIT_EVAL_RUNNER"
           test -n "$SEO_AEO_GEO_AUDIT_EVAL_IMAGE"
           test -n "$SEO_AEO_GEO_AUDIT_EVAL_MODEL"
-          case "$SEO_AEO_GEO_AUDIT_EVAL_RUNNER" in ./*) ;; *) exit 1 ;; esac
-          python3 skills/agentic-commerce/seo-aeo-geo-audit/eval/run_harness.py --runner "$SEO_AEO_GEO_AUDIT_EVAL_RUNNER" --image "$SEO_AEO_GEO_AUDIT_EVAL_IMAGE" --model "$SEO_AEO_GEO_AUDIT_EVAL_MODEL" --trials 5 --output seo-aeo-geo-audit-results.json
+          test -f skills/agentic-commerce/seo-aeo-geo-audit/eval/run_target_agent.py
+          python3 skills/agentic-commerce/seo-aeo-geo-audit/eval/run_harness.py --image "$SEO_AEO_GEO_AUDIT_EVAL_IMAGE" --model "$SEO_AEO_GEO_AUDIT_EVAL_MODEL" --trials 5 --output seo-aeo-geo-audit-results.json
           python3 skills/agentic-commerce/seo-aeo-geo-audit/eval/validate-harness-results.py --results seo-aeo-geo-audit-results.json
       - uses: actions/upload-artifact@v4
         if: always()

@@ -10,7 +10,7 @@ TRIALS = 5
 ENABLED_THRESHOLD = 0.8
 MINIMUM_ENABLED_DELTA = 0.02
 RUNNER_PROTOCOL_VERSION = "seo-aeo-geo-artifact-runner/v1"
-RECORD_FIELDS = {"case_id", "condition", "trial", "model", "harness_version", "runner_protocol_version", "audit_artifact"}
+RECORD_FIELDS = {"case_id", "condition", "trial", "model", "harness_version", "runner_protocol_version", "skill_used", "audit_artifact"}
 
 
 def grade_artifact(case: dict, artifact: object) -> bool:
@@ -52,6 +52,8 @@ def validate(records: list[dict]) -> tuple[list[str], list[str]]:
             failures.append(f"duplicate record: {key}")
         elif not isinstance(record["model"], str) or not record["model"].strip() or not isinstance(record["harness_version"], str) or not record["harness_version"].strip() or record["runner_protocol_version"] != RUNNER_PROTOCOL_VERSION:
             failures.append(f"invalid metadata: {key}")
+        elif record["skill_used"] is not (key[1] == "enabled" and cases[key[0]]["expected_skill_usage"] == "use"):
+            failures.append(f"invalid skill_used: {key}")
         else:
             seen.add(key)
             grouped[key[:2]].append(record)
