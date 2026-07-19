@@ -107,6 +107,53 @@ class OcrDispositionTests(unittest.TestCase):
 
         self.assertEqual(failures, "OCR finding 43 must use only disposition and reason")
 
+    def test_rejects_repeated_disposition_fields_and_unrecognised_content(self):
+        fixture = {
+            "head_sha": "latest",
+            "review_comments": [
+                {
+                    "id": 44,
+                    "commit_id": "latest",
+                    "user": {"login": "github-actions[bot]"},
+                    "body": "<!-- ocr-run-1 -->\\nFinding",
+                },
+                {
+                    "id": 45,
+                    "commit_id": "latest",
+                    "user": {"login": "github-actions[bot]"},
+                    "body": "<!-- ocr-run-1 -->\\nFinding",
+                },
+            ],
+            "issue_comments": [
+                {
+                    "author_association": "MEMBER",
+                    "body": "\\n".join([
+                        "<!-- ocr-disposition:44 -->",
+                        "Disposition: fixed",
+                        "Disposition: fixed",
+                        "Reason: Fixed.",
+                    ]),
+                },
+                {
+                    "author_association": "MEMBER",
+                    "body": "\\n".join([
+                        "<!-- ocr-disposition:45 -->",
+                        "Disposition: fixed",
+                        "Reason: Fixed.",
+                        "Test: python3 -m unittest",
+                    ]),
+                },
+            ],
+            "pr_commits": [{"sha": "latest"}],
+        }
+
+        failures = governance.validate_ocr_dispositions(**fixture)
+
+        self.assertEqual(failures, [
+            "OCR finding 44 must use only disposition and reason",
+            "OCR finding 45 must use only disposition and reason",
+        ])
+
     def test_finds_a_latest_head_finding_after_the_first_page(self):
         comments = [
             {"id": index, "commit_id": "old", "user": {"login": "github-actions[bot]"}, "body": "<!-- ocr-page -->"}

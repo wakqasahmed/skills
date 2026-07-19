@@ -7,9 +7,8 @@ from pathlib import Path
 
 
 DISPOSITION_RE = re.compile(r"<!--\s*ocr-disposition\s*:\s*(\d+)\s*-->", re.IGNORECASE)
-FIELD_RE = re.compile(r"^(Disposition|Commit|Test|Issue|Reason):\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 LOCAL_CREDENTIAL_PATH_RE = re.compile(
-    r"(?:~|/(?:home|Users)/[^/\s]+)/(?:[^\s]*?/)?(?:\.config/)?[^\s]*(?:credential|credentials|token|secret|hosts\.yml|\.env)[^\s]*",
+    r"(?:~/(?:[^\s/]+/)*|/(?:[^\s/]+/)*)(?:[^\s/]*(?:credential|token|secret)[^\s/]*|\.env[^\s/]*|hosts\.yml)",
     re.IGNORECASE,
 )
 OCR_MARKER_RE = re.compile(r"<!--\s*ocr-", re.IGNORECASE)
@@ -43,6 +42,22 @@ def is_authorized_disposition(comment):
     return comment.get("author_association") in AUTHORIZED_ASSOCIATIONS
 
 
+def parse_disposition(body, marker):
+    if body[:marker.start()].strip():
+        return None
+    lines = [line.strip() for line in body[marker.end():].splitlines() if line.strip()]
+    if len(lines) != 2:
+        return None
+    disposition_match = re.fullmatch(r"Disposition:\s*(.+?)\s*", lines[0], re.IGNORECASE)
+    reason_match = re.fullmatch(r"Reason:\s*(.+?)\s*", lines[1], re.IGNORECASE)
+    if not disposition_match or not reason_match:
+        return None
+    return {
+        "disposition": disposition_match.group(1),
+        "reason": reason_match.group(1),
+    }
+
+
 def dispositions_by_finding(issue_comments):
     dispositions = {}
     unauthorized = set()
@@ -55,12 +70,13 @@ def dispositions_by_finding(issue_comments):
         if not is_authorized_disposition(comment):
             unauthorized.add(finding_id)
             continue
-        fields = {key.lower(): value.strip() for key, value in FIELD_RE.findall(body)}
-        dispositions[finding_id] = fields
+        dispositions[finding_id] = parse_disposition(body, marker)
     return dispositions, unauthorized
 
 
 def disposition_error(finding_id, fields, blocking, pr_commit_shas):
+    if fields is None:
+        return f"OCR finding {finding_id} must use only disposition and reason"
     disposition = fields.get("disposition")
     if disposition not in {"fixed", "deferred", "declined"}:
         return f"OCR finding {finding_id} on latest head is undispositioned"
