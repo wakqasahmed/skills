@@ -83,6 +83,7 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [Review Gate](skills/engineering/review-gate/)
 - [Subagent Pipeline](skills/engineering/subagent-pipeline/)
 - [To PRD](skills/engineering/to-prd/)
+- [Workflow Router](skills/engineering/workflow-router/)
 
 ### PHP/Laravel/Filament
 
