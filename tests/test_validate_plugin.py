@@ -193,6 +193,21 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertIn("source-sync automation", result.stderr)
         self.assertIn(".github/workflows/sync-check.yml", result.stderr)
 
+    def test_rejects_a_skill_with_missing_check_commands(self) -> None:
+        root = self.make_repository()
+        skill = root / "skills" / "agentic-commerce" / "agentic-commerce-skill" / "SKILL.md"
+        skill.write_text("# Example\n\nRun `references/checks.md`.\n")
+        subprocess.run(["git", "add", str(skill.relative_to(root))], cwd=root, check=True)
+
+        result = self.validate(root)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing check commands", result.stderr)
+        self.assertIn(
+            "skills/agentic-commerce/agentic-commerce-skill/references/checks.md",
+            result.stderr,
+        )
+
     def test_rejects_missing_or_duplicate_skill_navigation(self) -> None:
         root = self.make_repository()
         readme = root / "README.md"

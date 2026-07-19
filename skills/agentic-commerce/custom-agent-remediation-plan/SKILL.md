@@ -13,6 +13,8 @@ description: Convert Agentic Commerce audit findings into a custom-agent impleme
 4. Produce a setup checklist with acceptance tests.
 5. Define how score lift or readiness improvement will be verified.
 
+Run the checks in `references/checks.md` against the audit findings and proposed plan before presenting it.
+
 ## Guardrails
 
 - See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).
