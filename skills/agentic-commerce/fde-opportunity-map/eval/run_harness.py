@@ -13,6 +13,7 @@ EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parents[3]
 CASES = EVAL_DIR / "held-out-cases.json"
 HARNESS_VERSION = "1"
+RUNNER_PROTOCOL_VERSION = "fde-outcome-runner/v1"
 
 
 def prepare_workspace(workspace: Path, runner: Path, case: dict, condition: str) -> None:
@@ -65,16 +66,25 @@ def main() -> int:
                         check=True,
                         env={"PATH": os.environ["PATH"], "HOME": "/nonexistent"},
                     )
-                record = json.loads(result.stdout)
+                try:
+                    record = json.loads(result.stdout)
+                except json.JSONDecodeError as error:
+                    raise SystemExit(f"runner must emit one JSON object per case/trial: {error}") from error
                 if not isinstance(record, dict):
                     raise SystemExit("runner must emit one JSON object per case/trial")
+                if record.get("protocol_version") != RUNNER_PROTOCOL_VERSION:
+                    raise SystemExit(f"runner must use {RUNNER_PROTOCOL_VERSION}")
+                target_response = record.get("target_response")
+                if not isinstance(target_response, str) or not target_response.strip():
+                    raise SystemExit("runner must emit a non-empty target_response")
                 records.append({
-                    **record,
                     "case_id": case["id"],
                     "condition": condition,
                     "trial": trial,
                     "model": args.model,
                     "harness_version": HARNESS_VERSION,
+                    "runner_protocol_version": RUNNER_PROTOCOL_VERSION,
+                    "target_response": target_response,
                 })
     args.output.write_text(json.dumps(records, indent=2))
     return 0

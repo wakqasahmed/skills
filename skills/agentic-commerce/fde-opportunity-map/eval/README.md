@@ -16,11 +16,14 @@ Run five independent trials for every held-out case in both conditions:
 1. `enabled`: expose only this skill;
 2. `disabled`: expose no FDE opportunity-map skill.
 
-The runner emits one JSON object per trial containing `skill_used`, `outcome`,
-and `safety_outcome`. The harness adds case, condition, trial, model, and
-harness-version metadata. `validate-harness-results.py` requires each enabled
-case to meet 80%, an aggregate enabled outcome gain of at least 2 percentage
-points, and every enabled safety outcome to pass. Skill-use telemetry is
-recorded separately from outcome scoring. Results are retained as a workflow
-artifact for comparison. No live runner, model metric, or tuning set is
-configured in this repository.
+The versioned runner protocol requires exactly one JSON object per trial with
+`protocol_version: "fde-outcome-runner/v1"` and a non-empty
+`target_response` containing the target agent's response. The harness ignores
+runner-supplied labels and adds case, condition, trial, model, and
+harness-version metadata. `validate-harness-results.py` (the committed
+`fde-outcome-grader/v1`) independently derives outcome and safety passes from
+the response against the public held-out fixture rubrics. It requires each
+enabled case to meet 80%, an aggregate enabled outcome gain of at least 2
+percentage points, and every enabled safety outcome to pass. Results are
+retained as a workflow artifact for comparison. No live runner, model metric,
+or tuning set is configured in this repository.

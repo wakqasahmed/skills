@@ -22,6 +22,27 @@ def load_module(path: Path, name: str):
     return module
 
 
+def passing_response(case: dict) -> str:
+    return " ".join([*case["outcome_evidence"], *case["safety_evidence"]])
+
+
+def records_for(cases: list[dict]) -> list[dict]:
+    return [
+        {
+            "case_id": case["id"],
+            "condition": condition,
+            "trial": trial,
+            "model": "test-model",
+            "harness_version": "test-harness-1",
+            "runner_protocol_version": "fde-outcome-runner/v1",
+            "target_response": passing_response(case),
+        }
+        for case in cases
+        for condition in ("enabled", "disabled")
+        for trial in range(1, 6)
+    ]
+
+
 class FdeOpportunityMapEvalTest(unittest.TestCase):
     def test_held_out_cases_are_balanced_and_outcome_based(self):
         cases = json.loads(CASES.read_text())["cases"]
@@ -31,6 +52,7 @@ class FdeOpportunityMapEvalTest(unittest.TestCase):
         self.assertGreaterEqual(sum(case["expected_skill_usage"] == "do_not_use" for case in cases), 5)
         self.assertTrue(all(case["split"] == "held_out" for case in cases))
         self.assertTrue(all(case["expected_outcome"] and case["expected_safety_outcome"] for case in cases))
+        self.assertTrue(all(case["outcome_evidence"] and case["safety_evidence"] for case in cases))
 
     def test_deterministic_contract_runner_is_offline(self):
         result = subprocess.run(["python3", str(RUNNER)], text=True, capture_output=True)
@@ -41,26 +63,13 @@ class FdeOpportunityMapEvalTest(unittest.TestCase):
 
     def test_harness_requires_enabled_delta_and_no_safety_regression(self):
         cases = json.loads(CASES.read_text())["cases"]
-        records = []
-        for case in cases:
-            for condition in ("enabled", "disabled"):
-                for trial in range(1, 6):
-                    records.append({
-                        "case_id": case["id"],
-                        "condition": condition,
-                        "trial": trial,
-                        "model": "test-model",
-                        "harness_version": "test-harness-1",
-                        "skill_used": condition == "enabled" and case["expected_skill_usage"] == "use",
-                        "outcome": case["expected_outcome"],
-                        "safety_outcome": case["expected_safety_outcome"],
-                    })
+        records = records_for(cases)
 
         validator = load_module(VALIDATOR, "fde_harness_validator")
         failures, _ = validator.validate(records)
         self.assertTrue(any("outcome delta" in failure for failure in failures))
 
-        next(record for record in records if record["condition"] == "disabled")["outcome"] = "wrong"
+        next(record for record in records if record["condition"] == "disabled")["target_response"] = "wrong"
         with tempfile.TemporaryDirectory() as directory:
             results = Path(directory) / "results.json"
             results.write_text(json.dumps(records))
@@ -98,50 +107,37 @@ class FdeOpportunityMapEvalTest(unittest.TestCase):
 
         self.assertEqual(exposed_case, {"id": case["id"], "prompt": case["prompt"]})
 
-    def test_harness_scores_outcomes_independently_of_skill_use_telemetry(self):
+    def test_harness_scores_outcomes_from_target_response(self):
         validator = load_module(VALIDATOR, "fde_outcome_scoring_validator")
         cases = json.loads(CASES.read_text())["cases"]
-        records = []
-        for case in cases:
-            for condition in ("enabled", "disabled"):
-                for trial in range(1, 6):
-                    records.append({
-                        "case_id": case["id"],
-                        "condition": condition,
-                        "trial": trial,
-                        "model": "test-model",
-                        "harness_version": "test-harness-1",
-                        "skill_used": False,
-                        "outcome": case["expected_outcome"],
-                        "safety_outcome": case["expected_safety_outcome"],
-                    })
+        records = records_for(cases)
 
         failures, _ = validator.validate(records)
 
         self.assertEqual(failures, ["aggregate enabled outcome delta is below 2%"])
 
+    def test_harness_rejects_forged_labels_without_target_response_evidence(self):
+        validator = load_module(VALIDATOR, "fde_forged_labels_validator")
+        cases = json.loads(CASES.read_text())["cases"]
+        records = records_for(cases)
+        for record in records:
+            record["target_response"] = "I completed the requested work."
+            record["outcome"] = next(case for case in cases if case["id"] == record["case_id"])["expected_outcome"]
+            record["safety_outcome"] = next(case for case in cases if case["id"] == record["case_id"])["expected_safety_outcome"]
+
+        failures, _ = validator.validate(records)
+
+        self.assertTrue(any("/enabled is below" in failure for failure in failures))
+
     def test_harness_rejects_any_enabled_safety_failure(self):
         validator = load_module(VALIDATOR, "fde_safety_validator")
         cases = json.loads(CASES.read_text())["cases"]
-        records = []
-        for case in cases:
-            for condition in ("enabled", "disabled"):
-                for trial in range(1, 6):
-                    records.append({
-                        "case_id": case["id"],
-                        "condition": condition,
-                        "trial": trial,
-                        "model": "test-model",
-                        "harness_version": "test-harness-1",
-                        "skill_used": condition == "enabled" and case["expected_skill_usage"] == "use",
-                        "outcome": case["expected_outcome"],
-                        "safety_outcome": case["expected_safety_outcome"],
-                    })
+        records = records_for(cases)
 
-        next(record for record in records if record["case_id"] == "erp-order-sync" and record["condition"] == "enabled")["safety_outcome"] = "unsafe"
-        next(record for record in records if record["case_id"] == "pim-feed-normalization" and record["condition"] == "disabled")["safety_outcome"] = "unsafe"
-        next(record for record in records if record["case_id"] == "checkout-approval-workflow" and record["condition"] == "disabled")["safety_outcome"] = "unsafe"
-        next(record for record in records if record["condition"] == "disabled")["outcome"] = "wrong"
+        next(record for record in records if record["case_id"] == "erp-order-sync" and record["condition"] == "enabled")["target_response"] = " ".join(cases[0]["outcome_evidence"])
+        next(record for record in records if record["case_id"] == "pim-feed-normalization" and record["condition"] == "disabled")["target_response"] = " ".join(cases[1]["outcome_evidence"])
+        next(record for record in records if record["case_id"] == "checkout-approval-workflow" and record["condition"] == "disabled")["target_response"] = " ".join(cases[2]["outcome_evidence"])
+        next(record for record in records if record["condition"] == "disabled")["target_response"] = "wrong"
 
         failures, _ = validator.validate(records)
 
@@ -153,5 +149,7 @@ class FdeOpportunityMapEvalTest(unittest.TestCase):
         self.assertIn("workflow_dispatch:", workflow)
         self.assertIn("if: inputs.run_harness", workflow)
         self.assertIn("contents: read", workflow)
+        self.assertIn("timeout-minutes: 60", workflow)
+        self.assertIn("concurrency:", workflow)
         self.assertIn("fde-opportunity-map-results.json", workflow)
         self.assertIn("upload-artifact", workflow)

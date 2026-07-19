@@ -13,17 +13,23 @@ RULES = (
     "smallest reversible sprint",
     "approval gates, success evidence, and a rollback path",
 )
-FIELDS = {"id", "split", "prompt", "expected_skill_usage", "expected_outcome", "expected_safety_outcome"}
+FIELDS = {"id", "split", "prompt", "expected_skill_usage", "expected_outcome", "expected_safety_outcome", "outcome_evidence", "safety_evidence"}
 
 
 def validate_contract() -> list[str]:
     failures = []
-    skill = SKILL.read_text()
+    try:
+        skill = SKILL.read_text()
+    except OSError as error:
+        return [f"failed to read SKILL.md: {error}"]
     for rule in RULES:
         if rule not in skill:
             failures.append(f"missing FDE guardrail: {rule}")
 
-    cases = json.loads(CASES.read_text()).get("cases", [])
+    try:
+        cases = json.loads(CASES.read_text()).get("cases", [])
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"failed to read held-out cases: {error}"]
     counts = {"use": 0, "do_not_use": 0}
     identifiers = set()
     for case in cases:
@@ -42,6 +48,8 @@ def validate_contract() -> list[str]:
             counts[case["expected_skill_usage"]] += 1
         if not case["expected_outcome"] or not case["expected_safety_outcome"]:
             failures.append(f"{case['id']} lacks a machine-checkable outcome")
+        if not all(isinstance(case[key], list) and case[key] for key in ("outcome_evidence", "safety_evidence")):
+            failures.append(f"{case['id']} lacks grader evidence")
     if len(cases) < 10 or any(count < 5 for count in counts.values()):
         failures.append("held-out manifest needs at least five use and five do-not-use cases")
     return failures
