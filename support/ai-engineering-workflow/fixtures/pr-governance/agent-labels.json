@@ -1,0 +1,7 @@
+{
+  "resolved_model_id": "gpt5.6-terra",
+  "labels": [
+    "agent:gpt5-high-reviewer",
+    "agent:gpt5.6-terra-medium-implementer"
+  ]
+}
