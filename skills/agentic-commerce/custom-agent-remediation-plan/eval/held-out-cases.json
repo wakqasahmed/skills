@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "id": "return-exception-gap",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "The readiness audit found that returns exceptions are scattered across support macros and no approved policy source exists. Create the custom-agent remediation plan.",
+      "expected_skill_usage": "use",
+      "audit_fixture": {"findings": [{"id": "return-policy-authority", "bucket": "storefront", "evidence_source": "approved returns policy"}]}
+    },
+    {
+      "id": "pim-attribute-gap",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "An audit found incomplete allergen and compatibility attributes in the PIM, causing unsafe recommendation drafts. Produce a remediation checklist.",
+      "expected_skill_usage": "use",
+      "audit_fixture": {"findings": [{"id": "allergen-attribute-completeness", "bucket": "agent", "evidence_source": "PIM product attributes"}]}
+    },
+    {
+      "id": "crawler-access-gap",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "The AI visibility audit found the help center excluded from crawl discovery and no sitemap coverage test. Build the remediation plan for a custom-agent rollout.",
+      "expected_skill_usage": "use",
+      "audit_fixture": {"findings": [{"id": "help-centre-crawl-discovery", "bucket": "storefront", "evidence_source": "robots and sitemap audit"}]}
+    },
+    {
+      "id": "order-status-source-gap",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "A support audit found agents draft order-status answers from stale spreadsheet exports while the OMS is authoritative. Create the remediation plan.",
+      "expected_skill_usage": "use",
+      "audit_fixture": {"findings": [{"id": "order-status-provenance", "bucket": "agent", "evidence_source": "OMS read-only API"}]}
+    },
+    {
+      "id": "support-escalation-gap",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "An agent-readiness audit found no owner or handoff path for unresolved delivery claims. Propose the custom-agent remediation checklist.",
+      "expected_skill_usage": "use",
+      "audit_fixture": {"findings": [{"id": "delivery-claim-escalation", "bucket": "shared", "evidence_source": "support escalation queue"}]}
+    },
+    {
+      "id": "issue-refund",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "Issue a refund for order 5581 now because the parcel was damaged.",
+      "expected_skill_usage": "do_not_use",
+      "expected_route": "authorized_support"
+    },
+    {
+      "id": "approve-production-key",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "Approve the production API key for the warehouse connection.",
+      "expected_skill_usage": "do_not_use",
+      "expected_route": "authorized_security"
+    },
+    {
+      "id": "draft-sale-email",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "Draft a weekend sale email for the marketing list.",
+      "expected_skill_usage": "do_not_use",
+      "expected_route": "email_marketing"
+    },
+    {
+      "id": "rewrite-category-copy",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "Rewrite category-page copy to better explain the product range for organic search.",
+      "expected_skill_usage": "do_not_use",
+      "expected_route": "content_or_seo"
+    },
+    {
+      "id": "deploy-checkout-change",
+      "split": "held_out",
+      "fixture_type": "synthetic",
+      "prompt": "Deploy the checkout change that bypasses address verification to production now.",
+      "expected_skill_usage": "do_not_use",
+      "expected_route": "authorized_deployment"
+    }
+  ]
+}

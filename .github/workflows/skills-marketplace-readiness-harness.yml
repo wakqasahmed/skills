@@ -1,0 +1,46 @@
+name: Skills marketplace readiness harness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated evaluator
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: skills-marketplace-readiness-harness
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 skills/agentic-commerce/skills-marketplace-readiness/eval/run.py
+      - name: Run approved isolated marketplace readiness evaluator
+        env:
+          SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE: ${{ vars.SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE }}
+          SKILLS_MARKETPLACE_READINESS_EVAL_MODEL: ${{ vars.SKILLS_MARKETPLACE_READINESS_EVAL_MODEL }}
+        run: |
+          test -n "$SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE"
+          test -n "$SKILLS_MARKETPLACE_READINESS_EVAL_MODEL"
+          python3 skills/agentic-commerce/skills-marketplace-readiness/eval/run_harness.py \
+            --image "$SKILLS_MARKETPLACE_READINESS_EVAL_IMAGE" \
+            --model "$SKILLS_MARKETPLACE_READINESS_EVAL_MODEL" \
+            --trials 5 \
+            --output skills-marketplace-readiness-results.json
+          python3 skills/agentic-commerce/skills-marketplace-readiness/eval/validate-harness-results.py \
+            --results skills-marketplace-readiness-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skills-marketplace-readiness-harness-${{ github.run_id }}
+          path: skills-marketplace-readiness-results.json
+          if-no-files-found: error
