@@ -1,0 +1,7 @@
+[
+  "agent:gpt5-high-fixer",
+  "agent:gpt5-high-implementer",
+  "agent:gpt5-high-reviewer",
+  "agent:gpt5-medium-fixer",
+  "agent:gpt5-medium-reviewer"
+]
