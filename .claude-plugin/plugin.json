@@ -26,6 +26,7 @@
     "./skills/engineering/subagent-pipeline",
     "./skills/engineering/hitl-blocker",
     "./skills/engineering/release-gate",
+    "./skills/engineering/workflow-router",
     "./skills/product/roast",
     "./skills/productivity/handover",
     "./skills/engineering/ai-agent-pr-metadata",

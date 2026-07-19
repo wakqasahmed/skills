@@ -13,5 +13,7 @@ grep -Fq 'a product alias is not evidence of a model ID' "$SKILL"
 grep -Fq 'If the resolved model ID is unavailable, do not create an agent-role label.' "$SKILL"
 grep -Fq 'Final OCR Disposition Gate' "$SKILL"
 grep -Fq '<!-- ocr-disposition:COMMENT_ID -->' "$SKILL"
+grep -Fq 'Credential details: [redacted]' "$SKILL"
+grep -Fq 'Reason: One concise sentence that preserves the decision.' "$SKILL"
 
 echo "ai-agent-pr-metadata tests passed"
