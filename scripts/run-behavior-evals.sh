@@ -14,5 +14,6 @@ python3 "$ROOT/skills/agentic-commerce/product-knowledge-gap-analysis/eval/run.p
 bash "$ROOT/skills/agentic-commerce/llms-txt-and-crawler-access/eval/run-eval.sh"
 python3 "$ROOT/skills/agentic-commerce/fde-opportunity-map/eval/run.py"
 python3 "$ROOT/skills/agentic-commerce/custom-agent-remediation-plan/eval/run.py"
+python3 "$ROOT/skills/agentic-commerce/skills-marketplace-readiness/eval/run.py"
 bash "$ROOT/skills/email-marketing/eval/run-eval.sh"
 bash "$ROOT/skills/email-marketing/00-email-marketing-guardrails/eval/run-eval.sh"

@@ -24,5 +24,6 @@ jobs:
       - run: python3 -m unittest tests/test_llms_crawler_eval.py
       - run: python3 -m unittest tests/test_fde_opportunity_map_eval.py
       - run: python3 -m unittest tests/test_custom_agent_remediation_plan_eval.py
+      - run: python3 -m unittest tests/test_skills_marketplace_readiness_eval.py
       - run: python3 -m unittest tests/test_trigger_evals.py
       - run: python3 eval/run-trigger-evals.py --split validation

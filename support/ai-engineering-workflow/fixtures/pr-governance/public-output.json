@@ -1,0 +1,13 @@
+{
+  "safe": [
+    "Credential details: [redacted]",
+    "Token location: [redacted]"
+  ],
+  "unsafe": [
+    "Credential file: /home/agent/.config/credentials.json",
+    "Credential file: ~/.config/gh/hosts.yml",
+    "Credential file: /tmp/credentials.json",
+    "Credential file: /etc/secrets/token",
+    "Credential file: /opt/app/.env"
+  ]
+}

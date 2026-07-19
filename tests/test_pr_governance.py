@@ -1,5 +1,7 @@
 import importlib.util
 import json
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,7 +16,117 @@ governance = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(governance)
 
 
+def run_governance_gate(pr, review_comments=(), issue_comments=()):
+    with tempfile.TemporaryDirectory() as directory:
+        directory = Path(directory)
+        paths = {
+            "review_comments": directory / "review-comments.json",
+            "issue_comments": directory / "issue-comments.json",
+            "pr_commits": directory / "pr-commits.json",
+            "pr": directory / "pr.json",
+            "legacy_agent_labels": directory / "legacy-agent-labels.json",
+        }
+        inputs = {
+            "review_comments": list(review_comments),
+            "issue_comments": list(issue_comments),
+            "pr_commits": [],
+            "pr": pr,
+            "legacy_agent_labels": [],
+        }
+        for name, path in paths.items():
+            path.write_text(json.dumps(inputs[name]))
+
+        return subprocess.run(
+            [
+                "python3",
+                str(SCRIPT),
+                "--head-sha", "latest",
+                "--review-comments", str(paths["review_comments"]),
+                "--issue-comments", str(paths["issue_comments"]),
+                "--pr-commits", str(paths["pr_commits"]),
+                "--pr", str(paths["pr"]),
+                "--legacy-agent-labels", str(paths["legacy_agent_labels"]),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+
 class OcrDispositionTests(unittest.TestCase):
+    def test_gate_rejects_unsafe_public_output(self):
+        safe_pr = {
+            "body": "\n".join([
+                "- Resolved model ID: gpt5.6-terra",
+                "- Metadata limitation: N/A",
+                "- Verified agent labels: N/A",
+                "- Legacy agent labels: N/A",
+            ]),
+            "labels": [],
+        }
+
+        for public_input in (
+            {"pr": {**safe_pr, "body": f"{safe_pr['body']}\nCredential: /tmp/credentials.json"}},
+            {"review_comments": [{"body": "Credential: /tmp/credentials.json"}]},
+            {"issue_comments": [{"body": "Credential: /tmp/credentials.json"}]},
+        ):
+            result = run_governance_gate(
+                public_input.get("pr", safe_pr),
+                public_input.get("review_comments", []),
+                public_input.get("issue_comments", []),
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Public output contains a local credential-file path", result.stdout)
+
+    def test_gate_accepts_safe_public_output(self):
+        result = run_governance_gate(
+            {
+                "body": "\n".join([
+                    "- Resolved model ID: gpt5.6-terra",
+                    "- Metadata limitation: N/A",
+                    "- Verified agent labels: N/A",
+                    "- Legacy agent labels: N/A",
+                    "Credential: [redacted]",
+                ]),
+                "labels": [],
+            },
+            [{"body": "Token location: [redacted]"}],
+            [{"body": "Credential: [redacted]"}],
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_gate_ignores_automated_review_text(self):
+        result = run_governance_gate(
+            {
+                "body": "\n".join([
+                    "- Resolved model ID: gpt5.6-terra",
+                    "- Metadata limitation: N/A",
+                    "- Verified agent labels: N/A",
+                    "- Legacy agent labels: N/A",
+                ]),
+                "labels": [],
+            },
+            [{
+                "user": {"login": "github-actions[bot]"},
+                "body": "Credential: /tmp/credentials.json",
+            }],
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_public_output_rejects_local_credential_file_paths(self):
+        fixture = json.loads((FIXTURES / "public-output.json").read_text())
+
+        for output in fixture["safe"]:
+            self.assertEqual(governance.validate_public_output(output), [])
+        for output in fixture["unsafe"]:
+            self.assertEqual(
+                governance.validate_public_output(output),
+                ["Public output contains a local credential-file path"],
+            )
+
     def test_late_latest_head_finding_blocks_until_dispositioned(self):
         fixture = json.loads((FIXTURES / "late-ocr-comments.json").read_text())
 
@@ -61,7 +173,7 @@ class OcrDispositionTests(unittest.TestCase):
 
         self.assertEqual(failures, ["OCR finding 41 has no authorized disposition"])
 
-    def test_rejects_fixed_evidence_from_outside_the_pr(self):
+    def test_requires_a_one_sentence_disposition_reason(self):
         fixture = {
             "head_sha": "latest",
             "review_comments": [
@@ -76,7 +188,7 @@ class OcrDispositionTests(unittest.TestCase):
                 {
                     "user": {"login": "maintainer"},
                     "author_association": "MEMBER",
-                    "body": "<!-- ocr-disposition:42 -->\nDisposition: fixed\nCommit: unrelated\nTest: python3 -m unittest tests.test_pr_governance",
+                    "body": "<!-- ocr-disposition:42 -->\nDisposition: fixed\nReason: Fixed.",
                 }
             ],
             "pr_commits": [{"sha": "latest"}],
@@ -84,7 +196,64 @@ class OcrDispositionTests(unittest.TestCase):
 
         failures = governance.validate_ocr_dispositions(**fixture)
 
-        self.assertEqual(failures, ["Fixed OCR finding 42 needs a commit on this PR"])
+        self.assertEqual(failures, [])
+
+    def test_rejects_verbose_disposition_evidence(self):
+        failures = governance.disposition_error(
+            43,
+            {"disposition": "fixed", "reason": "Fixed in abc123.", "test": "python3 -m unittest"},
+            False,
+            {"abc123"},
+        )
+
+        self.assertEqual(failures, "OCR finding 43 must use only disposition and reason")
+
+    def test_rejects_repeated_disposition_fields_and_unrecognised_content(self):
+        fixture = {
+            "head_sha": "latest",
+            "review_comments": [
+                {
+                    "id": 44,
+                    "commit_id": "latest",
+                    "user": {"login": "github-actions[bot]"},
+                    "body": "<!-- ocr-run-1 -->\nFinding",
+                },
+                {
+                    "id": 45,
+                    "commit_id": "latest",
+                    "user": {"login": "github-actions[bot]"},
+                    "body": "<!-- ocr-run-1 -->\nFinding",
+                },
+            ],
+            "issue_comments": [
+                {
+                    "author_association": "MEMBER",
+                    "body": "\n".join([
+                        "<!-- ocr-disposition:44 -->",
+                        "Disposition: fixed",
+                        "Disposition: fixed",
+                        "Reason: Fixed.",
+                    ]),
+                },
+                {
+                    "author_association": "MEMBER",
+                    "body": "\n".join([
+                        "<!-- ocr-disposition:45 -->",
+                        "Disposition: fixed",
+                        "Reason: Fixed.",
+                        "Test: python3 -m unittest",
+                    ]),
+                },
+            ],
+            "pr_commits": [{"sha": "latest"}],
+        }
+
+        failures = governance.validate_ocr_dispositions(**fixture)
+
+        self.assertEqual(failures, [
+            "OCR finding 44 must use only disposition and reason",
+            "OCR finding 45 must use only disposition and reason",
+        ])
 
     def test_finds_a_latest_head_finding_after_the_first_page(self):
         comments = [

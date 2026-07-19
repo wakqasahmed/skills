@@ -58,6 +58,7 @@
     {"skill":"engineering/review-gate","category":"engineering","positive":"Run an independent semantic review gate before merging this change.","negative":"Rename a CSS class.","split":"validation"},
     {"skill":"engineering/subagent-pipeline","category":"engineering","positive":"Run an implementer, reviewer, and fixer subagent pipeline for this issue.","negative":"Answer this trivia question.","split":"train"},
     {"skill":"engineering/to-prd","category":"engineering","positive":"Synthesize this conversation into a PRD and publish it to the issue tracker.","negative":"Turn a drawing into a PDF.","split":"validation"},
+    {"skill":"engineering/workflow-router","category":"engineering","positive":"Route my software work request to the smallest delivery workflow and run setup workflow.","negative":"Bake a sourdough bread loaf.","split":"validation"},
     {"skill":"filament/filament-conventions","category":"php","positive":"Add a Filament resource with forms, tables, and actions.","negative":"Build a plain HTTP endpoint.","split":"train"},
     {"skill":"filament/filament-plugin-first","category":"php","positive":"Search the Filament plugin ecosystem before building this custom dashboard widget.","negative":"Add a straightforward existing Filament form field.","split":"validation"},
     {"skill":"filament/livewire-conventions","category":"php","positive":"Debug Livewire component state that resets during a Filament interaction.","negative":"Set a site color palette.","split":"train"},
