@@ -23,7 +23,7 @@ def route_for(request: str) -> str:
         return "human-held-blocker"
     if any(term in text for term in ("release", "reviewed build", "production")):
         return "release"
-    if any(term in text for term in ("500", "error", "broken", "regression", "returns")):
+    if any(term in text for term in ("500", "error", "broken", "regression")):
         return "bug"
     if "claimed" in text and "non-trivial" in text and ("github" in text or "issue" in text):
         return "claimed-github-issue"
@@ -42,7 +42,9 @@ def route_text(skill_text: str, route: str) -> str:
         "human-held-blocker": ("### Human-held blocker", "\n### "),
     }
     heading, separator = sections[route]
-    start = skill_text.index(heading)
+    start = skill_text.find(heading)
+    if start == -1:
+        raise AssertionError(f"route heading not found: {heading}")
     remainder = skill_text[start:]
     next_heading = remainder.find(separator, 1)
     return remainder if next_heading == -1 else remainder[:next_heading]
