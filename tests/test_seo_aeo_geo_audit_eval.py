@@ -101,19 +101,21 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
             harness = load_module(HARNESS, "seo_target_agent_harness")
-            harness.prepare_workspace(workspace, audit_case, "enabled")
-            request = target_agent.workspace_request(workspace, "enabled", "declared-model")
+            target_workspace = harness.prepare_workspace(workspace, audit_case, "enabled")
+            request = target_agent.workspace_request(target_workspace, "declared-model")
         self.assertEqual(request["model"], "declared-model")
         self.assertEqual(request["prompt"], audit_case["prompt"])
         self.assertIn("cite the observed output", request["skill"])
         self.assertIn("Indexability and canonical URL", request["checks"])
         self.assertNotIn("expected", json.dumps(request))
+        self.assertNotIn("condition", request)
+        self.assertNotIn(audit_case["id"], json.dumps(request))
 
     def test_target_agent_response_requires_model_version_attestation(self):
         target_agent = load_module(TARGET_AGENT, "seo_target_agent_attestation")
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
-            (workspace / "case.json").write_text(json.dumps({"prompt": "Audit this.", "input": {"observations": []}}))
+            (workspace / "input.json").write_text(json.dumps({"prompt": "Audit this.", "input": {"observations": []}}))
             (workspace / "SKILL.md").write_text("required skill guidance")
             (workspace / "checks.md").write_text("required audit checks")
             response = {"model": "declared-model", "model_version": "declared-model-2026-07", "skill_used": True, "audit_artifact": {"disposition": "audit"}}
@@ -122,7 +124,7 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
             agent.chmod(0o755)
             previous = os.environ.copy()
             try:
-                os.environ.update({"HARNESS_WORKSPACE": str(workspace), "HARNESS_CONDITION": "enabled", "HARNESS_MODEL": "declared-model", "TARGET_AGENT_COMMAND": str(agent)})
+                os.environ.update({"HARNESS_WORKSPACE": str(workspace), "HARNESS_MODEL": "declared-model", "TARGET_AGENT_COMMAND": str(agent)})
                 result = subprocess.run(["python3", str(TARGET_AGENT)], text=True, capture_output=True)
             finally:
                 os.environ.clear()
@@ -131,22 +133,28 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         record = json.loads(result.stdout)
         self.assertEqual(record["model_version"], "declared-model-2026-07")
 
-    def test_isolated_harness_only_exposes_inputs_and_enabled_skill(self):
+    def test_isolated_harness_keeps_case_labels_and_condition_outside_target_workspace(self):
         harness = load_module(HARNESS, "seo_isolation_harness")
         case = json.loads(CASES.read_text())["cases"][0]
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
-            harness.prepare_workspace(workspace, case, "enabled")
-            exposed = json.loads((workspace / "case.json").read_text())
-            self.assertEqual(exposed, {"id": case["id"], "prompt": case["prompt"], "input": case["input"]})
-            self.assertTrue((workspace / "SKILL.md").is_file())
-            self.assertTrue((workspace / "checks.md").is_file())
-            self.assertFalse(any("expected" in path.read_text() for path in workspace.iterdir() if path.is_file()))
-        command = harness.isolated_command(Path("/tmp/seo-eval"), "image@sha256:abc", "declared-model", "enabled", 1)
+            for condition in ("enabled", "disabled"):
+                target_workspace = harness.prepare_workspace(workspace / condition, case, condition)
+                exposed = json.loads((target_workspace / "input.json").read_text())
+                contents = "\n".join(path.read_text() for path in target_workspace.iterdir() if path.is_file())
+                self.assertEqual(exposed, {"prompt": case["prompt"], "input": case["input"]})
+                self.assertEqual((target_workspace / "SKILL.md").is_file(), condition == "enabled")
+                self.assertEqual((target_workspace / "checks.md").is_file(), condition == "enabled")
+                self.assertNotIn(case["id"], contents)
+                self.assertNotIn(condition, contents)
+                self.assertFalse((target_workspace / "case.json").exists())
+        command = harness.isolated_command(Path("/tmp/seo-eval"), "image@sha256:abc", "declared-model")
         self.assertIn("--network", command)
         self.assertIn("none", command)
         self.assertIn("--read-only", command)
         self.assertIn("HOME=/nonexistent", HARNESS.read_text())
+        self.assertNotIn("HARNESS_CONDITION", command)
+        self.assertNotIn("HARNESS_TRIAL", command)
 
     def test_live_harness_is_manually_gated_and_retains_results(self):
         workflow = WORKFLOW.read_text()

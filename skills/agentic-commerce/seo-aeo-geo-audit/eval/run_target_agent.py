@@ -10,16 +10,15 @@ PROTOCOL_VERSION = "seo-aeo-geo-artifact-runner/v1"
 DEFAULT_TARGET_AGENT = "/usr/local/bin/seo-aeo-geo-audit-agent"
 
 
-def workspace_request(workspace: Path, condition: str, model: str) -> dict:
-    case = json.loads((workspace / "case.json").read_text())
+def workspace_request(workspace: Path, model: str) -> dict:
+    target_input = json.loads((workspace / "input.json").read_text())
     request = {
         "protocol_version": PROTOCOL_VERSION,
         "model": model,
-        "condition": condition,
-        "prompt": case["prompt"],
-        "input": case["input"],
+        "prompt": target_input["prompt"],
+        "input": target_input["input"],
     }
-    if condition == "enabled":
+    if (workspace / "SKILL.md").is_file():
         request["skill"] = (workspace / "SKILL.md").read_text()
         request["checks"] = (workspace / "checks.md").read_text()
     return request
@@ -44,10 +43,9 @@ def run_target_agent(request: dict, command: str) -> dict:
 
 def main() -> int:
     workspace = Path(os.environ.get("HARNESS_WORKSPACE", "/workspace"))
-    condition = os.environ["HARNESS_CONDITION"]
     model = os.environ["HARNESS_MODEL"]
     response = run_target_agent(
-        workspace_request(workspace, condition, model),
+        workspace_request(workspace, model),
         os.environ.get("TARGET_AGENT_COMMAND", DEFAULT_TARGET_AGENT),
     )
     if response.get("model") != model or not isinstance(response.get("model_version"), str) or not response["model_version"].strip():

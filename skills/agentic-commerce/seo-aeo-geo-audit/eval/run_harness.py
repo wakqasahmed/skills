@@ -15,23 +15,25 @@ HARNESS_VERSION = "seo-aeo-geo-isolated-harness/v1"
 RUNNER_PROTOCOL_VERSION = "seo-aeo-geo-artifact-runner/v1"
 
 
-def prepare_workspace(workspace: Path, case: dict, condition: str) -> None:
-    (workspace / "case.json").write_text(json.dumps({"id": case["id"], "prompt": case["prompt"], "input": case["input"]}))
-    shutil.copy2(TARGET_AGENT, workspace / "runner")
-    (workspace / "runner").chmod(0o755)
+def prepare_workspace(workspace: Path, case: dict, condition: str) -> Path:
+    target_workspace = workspace / "target-input"
+    target_workspace.mkdir(parents=True)
+    (target_workspace / "input.json").write_text(json.dumps({"prompt": case["prompt"], "input": case["input"]}))
+    shutil.copy2(TARGET_AGENT, target_workspace / "runner")
+    (target_workspace / "runner").chmod(0o755)
     if condition == "enabled":
-        shutil.copy2(EVAL_DIR.parent / "SKILL.md", workspace / "SKILL.md")
-        shutil.copy2(EVAL_DIR.parent / "references" / "checks.md", workspace / "checks.md")
+        shutil.copy2(EVAL_DIR.parent / "SKILL.md", target_workspace / "SKILL.md")
+        shutil.copy2(EVAL_DIR.parent / "references" / "checks.md", target_workspace / "checks.md")
+    return target_workspace
 
 
-def isolated_command(workspace: Path, image: str, model: str, condition: str, trial: int) -> list[str]:
+def isolated_command(workspace: Path, image: str, model: str) -> list[str]:
     return [
         "docker", "run", "--rm", "--network", "none", "--read-only",
         "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
         "--mount", f"type=bind,source={workspace},target=/workspace,readonly",
         "--env", "HOME=/nonexistent", "--env", "HARNESS_WORKSPACE=/workspace",
-        "--env", f"HARNESS_MODEL={model}", "--env", f"HARNESS_CONDITION={condition}",
-        "--env", f"HARNESS_TRIAL={trial}", "--workdir", "/workspace", image, "/workspace/runner",
+        "--env", f"HARNESS_MODEL={model}", "--workdir", "/workspace", image, "/workspace/runner",
     ]
 
 
@@ -51,8 +53,8 @@ def main() -> int:
             for trial in range(1, args.trials + 1):
                 with tempfile.TemporaryDirectory() as directory:
                     workspace = Path(directory)
-                    prepare_workspace(workspace, case, condition)
-                    result = subprocess.run(isolated_command(workspace, args.image, args.model, condition, trial), text=True, capture_output=True, check=True, env={"PATH": os.environ["PATH"], "HOME": "/nonexistent"})
+                    target_workspace = prepare_workspace(workspace, case, condition)
+                    result = subprocess.run(isolated_command(target_workspace, args.image, args.model), text=True, capture_output=True, check=True, env={"PATH": os.environ["PATH"], "HOME": "/nonexistent"})
                 try:
                     runner_record = json.loads(result.stdout)
                 except json.JSONDecodeError as error:
