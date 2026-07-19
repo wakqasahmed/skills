@@ -1,6 +1,8 @@
 name: OCR disposition gate
 
 on:
+  pull_request:
+    types: [opened, reopened, synchronize]
   workflow_run:
     workflows: [Open Code Review]
     types: [completed]
@@ -17,6 +19,7 @@ jobs:
   gate:
     if: >-
       github.event_name == 'workflow_run' ||
+      github.event_name == 'pull_request' ||
       github.event.issue.pull_request != null
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -33,14 +36,17 @@ jobs:
           OCR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           OCR_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           OCR_PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [ "$EVENT_NAME" = workflow_run ]; then
             if [ "$OCR_CONCLUSION" != success ] || [ -z "$OCR_PR_NUMBER" ]; then
               exit 0
             fi
             PR_NUMBER="$OCR_PR_NUMBER"
-          else
+          elif [ "$EVENT_NAME" = issue_comment ]; then
             PR_NUMBER="$ISSUE_PR_NUMBER"
+          else
+            PR_NUMBER="$PULL_REQUEST_NUMBER"
           fi
 
           gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" > /tmp/pr.json
