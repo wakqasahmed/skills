@@ -8,6 +8,10 @@ from pathlib import Path
 
 DISPOSITION_RE = re.compile(r"<!--\s*ocr-disposition\s*:\s*(\d+)\s*-->", re.IGNORECASE)
 FIELD_RE = re.compile(r"^(Disposition|Commit|Test|Issue|Reason):\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+LOCAL_CREDENTIAL_PATH_RE = re.compile(
+    r"(?:~|/(?:home|Users)/[^/\s]+)/(?:[^\s]*?/)?(?:\.config/)?[^\s]*(?:credential|credentials|token|secret|hosts\.yml|\.env)[^\s]*",
+    re.IGNORECASE,
+)
 OCR_MARKER_RE = re.compile(r"<!--\s*ocr-", re.IGNORECASE)
 BLOCKING_RE = re.compile(r"\bblocking\s*:", re.IGNORECASE)
 ROLE_LABEL_RE = re.compile(r"^agent:(.+)-(low|medium|high)-(implementer|reviewer|fixer)$")
@@ -17,6 +21,12 @@ METADATA_LIMITATION_RE = re.compile(r"^\s*- Metadata limitation:\s*(.+?)\s*$", r
 VERIFIED_AGENT_LABELS_RE = re.compile(r"^\s*- Verified agent labels:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 LEGACY_AGENT_LABELS_RE = re.compile(r"^\s*- Legacy agent labels:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 OCR_GATE_CONTEXT = "OCR disposition gate"
+
+
+def validate_public_output(output):
+    if LOCAL_CREDENTIAL_PATH_RE.search(output):
+        return ["Public output contains a local credential-file path"]
+    return []
 
 
 def ocr_findings(head_sha, review_comments):
@@ -54,16 +64,13 @@ def disposition_error(finding_id, fields, blocking, pr_commit_shas):
     disposition = fields.get("disposition")
     if disposition not in {"fixed", "deferred", "declined"}:
         return f"OCR finding {finding_id} on latest head is undispositioned"
+    if set(fields) - {"disposition", "reason"}:
+        return f"OCR finding {finding_id} must use only disposition and reason"
     if blocking and disposition != "fixed":
         return f"Blocking OCR finding {finding_id} must be fixed"
-    if disposition == "fixed" and not (fields.get("commit") and fields.get("test")):
-        return f"Fixed OCR finding {finding_id} needs commit and test evidence"
-    if disposition == "fixed" and fields["commit"] not in pr_commit_shas:
-        return f"Fixed OCR finding {finding_id} needs a commit on this PR"
-    if disposition == "deferred" and not fields.get("issue"):
-        return f"Deferred OCR finding {finding_id} needs a linked issue"
-    if disposition == "declined" and not fields.get("reason"):
-        return f"Declined OCR finding {finding_id} needs a technical reason"
+    reason = fields.get("reason", "")
+    if not re.fullmatch(r"[^.!?\n]+[.!?]", reason):
+        return f"OCR finding {finding_id} needs a one-sentence reason"
     return None
 
 

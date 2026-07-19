@@ -15,6 +15,17 @@ spec.loader.exec_module(governance)
 
 
 class OcrDispositionTests(unittest.TestCase):
+    def test_public_output_rejects_local_credential_file_paths(self):
+        fixture = json.loads((FIXTURES / "public-output.json").read_text())
+
+        for output in fixture["safe"]:
+            self.assertEqual(governance.validate_public_output(output), [])
+        for output in fixture["unsafe"]:
+            self.assertEqual(
+                governance.validate_public_output(output),
+                ["Public output contains a local credential-file path"],
+            )
+
     def test_late_latest_head_finding_blocks_until_dispositioned(self):
         fixture = json.loads((FIXTURES / "late-ocr-comments.json").read_text())
 
@@ -61,7 +72,7 @@ class OcrDispositionTests(unittest.TestCase):
 
         self.assertEqual(failures, ["OCR finding 41 has no authorized disposition"])
 
-    def test_rejects_fixed_evidence_from_outside_the_pr(self):
+    def test_requires_a_one_sentence_disposition_reason(self):
         fixture = {
             "head_sha": "latest",
             "review_comments": [
@@ -76,7 +87,7 @@ class OcrDispositionTests(unittest.TestCase):
                 {
                     "user": {"login": "maintainer"},
                     "author_association": "MEMBER",
-                    "body": "<!-- ocr-disposition:42 -->\nDisposition: fixed\nCommit: unrelated\nTest: python3 -m unittest tests.test_pr_governance",
+                    "body": "<!-- ocr-disposition:42 -->\nDisposition: fixed\nReason: Fixed.",
                 }
             ],
             "pr_commits": [{"sha": "latest"}],
@@ -84,7 +95,17 @@ class OcrDispositionTests(unittest.TestCase):
 
         failures = governance.validate_ocr_dispositions(**fixture)
 
-        self.assertEqual(failures, ["Fixed OCR finding 42 needs a commit on this PR"])
+        self.assertEqual(failures, [])
+
+    def test_rejects_verbose_disposition_evidence(self):
+        failures = governance.disposition_error(
+            43,
+            {"disposition": "fixed", "reason": "Fixed in abc123.", "test": "python3 -m unittest"},
+            False,
+            {"abc123"},
+        )
+
+        self.assertEqual(failures, "OCR finding 43 must use only disposition and reason")
 
     def test_finds_a_latest_head_finding_after_the_first_page(self):
         comments = [

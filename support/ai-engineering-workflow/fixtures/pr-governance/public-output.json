@@ -1,0 +1,9 @@
+{
+  "safe": [
+    "Credential details: [redacted]"
+  ],
+  "unsafe": [
+    "Credential file: /home/agent/.config/credentials.json",
+    "Credential file: ~/.config/gh/hosts.yml"
+  ]
+}
