@@ -52,6 +52,15 @@ class SkillsMarketplaceReadinessEvalTest(unittest.TestCase):
         self.assertTrue(all(case["split"] == "held_out" for case in cases))
         self.assertTrue(all((EVAL_DIR / "fixtures" / "repos" / case["fixture"]).is_dir() for case in cases))
 
+    def test_missing_plugin_path_fixture_has_an_unresolvable_manifest_target(self):
+        fixture = EVAL_DIR / "fixtures" / "repos" / "missing-plugin-path"
+        manifest = json.loads((fixture / ".claude-plugin" / "plugin.json").read_text())
+        expected = load_module(VALIDATOR, "missing_plugin_path_expected").expected_outcomes()["missing-plugin-path"]
+
+        self.assertIn("skills/missing", manifest["skills"])
+        self.assertFalse((fixture / "skills" / "missing" / "SKILL.md").exists())
+        self.assertEqual(expected["evidence"], [".claude-plugin/plugin.json"])
+
     def test_deterministic_contract_runner_is_offline(self):
         result = subprocess.run(["python3", str(RUNNER)], text=True, capture_output=True)
 

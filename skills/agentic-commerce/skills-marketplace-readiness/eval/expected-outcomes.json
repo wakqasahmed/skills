@@ -1,6 +1,6 @@
 {
   "publish-plugin-pack": {"verdict":"ready","action":"publish","evidence":["README.md",".claude-plugin/plugin.json","skills/catalog/SKILL.md"]},
-  "missing-plugin-path": {"verdict":"blocked","action":"fix_plugin_paths","evidence":[".claude-plugin/plugin.json","skills/missing/SKILL.md"]},
+  "missing-plugin-path": {"verdict":"blocked","action":"fix_plugin_paths","evidence":[".claude-plugin/plugin.json"]},
   "safety-skill-without-eval": {"verdict":"blocked","action":"add_behavioral_eval","evidence":["skills/payment/SKILL.md",".github/workflows/ci.yml"]},
   "install-claim-before-listing": {"verdict":"blocked","action":"verify_public_listing","evidence":["README.md","docs/launch-copy.md"]},
   "domain-pack-scope": {"verdict":"blocked","action":"remove_unrelated_skill","evidence":["skills/code-review/SKILL.md","README.md"]},
