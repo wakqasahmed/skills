@@ -7,7 +7,10 @@ from pathlib import Path
 
 
 DISPOSITION_RE = re.compile(r"<!--\s*ocr-disposition\s*:\s*(\d+)\s*-->", re.IGNORECASE)
-FIELD_RE = re.compile(r"^(Disposition|Commit|Test|Issue|Reason):\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
+LOCAL_CREDENTIAL_PATH_RE = re.compile(
+    r"(?:~/(?:[^\s/]+/)*|/(?:[^\s/]+/)*)(?:[^\s/]*(?:credential|token|secret)[^\s/]*|\.env[^\s/]*|hosts\.yml)",
+    re.IGNORECASE,
+)
 OCR_MARKER_RE = re.compile(r"<!--\s*ocr-", re.IGNORECASE)
 BLOCKING_RE = re.compile(r"\bblocking\s*:", re.IGNORECASE)
 ROLE_LABEL_RE = re.compile(r"^agent:(.+)-(low|medium|high)-(implementer|reviewer|fixer)$")
@@ -17,6 +20,23 @@ METADATA_LIMITATION_RE = re.compile(r"^\s*- Metadata limitation:\s*(.+?)\s*$", r
 VERIFIED_AGENT_LABELS_RE = re.compile(r"^\s*- Verified agent labels:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 LEGACY_AGENT_LABELS_RE = re.compile(r"^\s*- Legacy agent labels:\s*(.+?)\s*$", re.IGNORECASE | re.MULTILINE)
 OCR_GATE_CONTEXT = "OCR disposition gate"
+
+
+def validate_public_output(output):
+    if LOCAL_CREDENTIAL_PATH_RE.search(output):
+        return ["Public output contains a local credential-file path"]
+    return []
+
+
+def validate_public_outputs(pr, review_comments, issue_comments):
+    outputs = [pr.get("body") or ""]
+    comments = [*review_comments, *issue_comments]
+    outputs.extend(
+        comment.get("body") or ""
+        for comment in comments
+        if comment.get("user", {}).get("login") != "github-actions[bot]"
+    )
+    return validate_public_output("\n".join(outputs))
 
 
 def ocr_findings(head_sha, review_comments):
@@ -33,6 +53,22 @@ def is_authorized_disposition(comment):
     return comment.get("author_association") in AUTHORIZED_ASSOCIATIONS
 
 
+def parse_disposition(body, marker):
+    if body[:marker.start()].strip():
+        return None
+    lines = [line.strip() for line in body[marker.end():].splitlines() if line.strip()]
+    if len(lines) != 2:
+        return None
+    disposition_match = re.fullmatch(r"Disposition:\s*(.+?)\s*", lines[0], re.IGNORECASE)
+    reason_match = re.fullmatch(r"Reason:\s*(.+?)\s*", lines[1], re.IGNORECASE)
+    if not disposition_match or not reason_match:
+        return None
+    return {
+        "disposition": disposition_match.group(1),
+        "reason": reason_match.group(1),
+    }
+
+
 def dispositions_by_finding(issue_comments):
     dispositions = {}
     unauthorized = set()
@@ -45,25 +81,23 @@ def dispositions_by_finding(issue_comments):
         if not is_authorized_disposition(comment):
             unauthorized.add(finding_id)
             continue
-        fields = {key.lower(): value.strip() for key, value in FIELD_RE.findall(body)}
-        dispositions[finding_id] = fields
+        dispositions[finding_id] = parse_disposition(body, marker)
     return dispositions, unauthorized
 
 
 def disposition_error(finding_id, fields, blocking, pr_commit_shas):
+    if fields is None:
+        return f"OCR finding {finding_id} must use only disposition and reason"
     disposition = fields.get("disposition")
     if disposition not in {"fixed", "deferred", "declined"}:
         return f"OCR finding {finding_id} on latest head is undispositioned"
+    if set(fields) - {"disposition", "reason"}:
+        return f"OCR finding {finding_id} must use only disposition and reason"
     if blocking and disposition != "fixed":
         return f"Blocking OCR finding {finding_id} must be fixed"
-    if disposition == "fixed" and not (fields.get("commit") and fields.get("test")):
-        return f"Fixed OCR finding {finding_id} needs commit and test evidence"
-    if disposition == "fixed" and fields["commit"] not in pr_commit_shas:
-        return f"Fixed OCR finding {finding_id} needs a commit on this PR"
-    if disposition == "deferred" and not fields.get("issue"):
-        return f"Deferred OCR finding {finding_id} needs a linked issue"
-    if disposition == "declined" and not fields.get("reason"):
-        return f"Declined OCR finding {finding_id} needs a technical reason"
+    reason = fields.get("reason", "")
+    if not re.fullmatch(r"[^.!?\n]+[.!?]", reason):
+        return f"OCR finding {finding_id} needs a one-sentence reason"
     return None
 
 
@@ -168,15 +202,19 @@ def main():
     parser.add_argument("--resolved-model-id")
     args = parser.parse_args()
 
-    failures = validate_ocr_dispositions(
+    review_comments = read_json(args.review_comments)
+    issue_comments = read_json(args.issue_comments)
+    pr = read_json(args.pr)
+    failures = validate_public_outputs(pr, review_comments, issue_comments)
+    failures.extend(validate_ocr_dispositions(
         args.head_sha,
-        read_json(args.review_comments),
-        read_json(args.issue_comments),
+        review_comments,
+        issue_comments,
         read_json(args.pr_commits),
-    )
+    ))
     failures.extend(validate_agent_labels(args.new_agent_label, args.resolved_model_id))
     failures.extend(validate_pr_agent_metadata(
-        read_json(args.pr),
+        pr,
         read_json(args.legacy_agent_labels),
     ))
     if failures:

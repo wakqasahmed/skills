@@ -12,6 +12,7 @@ Use this when a repository needs traceable AI assistance metadata in GitHub whil
 - Commit attribution follows `system-level/core.md` (Git: no AI co-author metadata unless explicitly required). This skill governs where the traceable detail goes instead: PR bodies, PR comments, and PR review bodies only.
 - Never guess the model name. Read the authoritative resolved model+version from the runtime or orchestrator; a product alias is not evidence of a model ID.
 - Include a run URL when the work was produced by GitHub Actions or another traceable runner.
+- Public issues, PRs, comments, and review records must never include credential values or local credential-file paths. Use `Credential details: [redacted]` instead.
 
 ## Agent Labels
 
@@ -137,13 +138,12 @@ Every OCR inline comment on the latest head uses one PR comment with this exact 
 ```md
 <!-- ocr-disposition:COMMENT_ID -->
 Disposition: fixed|deferred|declined
-Commit: SHA                     # required for fixed
-Test: command                   # required for fixed
-Issue: #123                     # required for deferred
-Reason: concise technical reason # required for declined
+Reason: One concise sentence that preserves the decision.
 ```
 
-Open Code Review emits latest-head inline findings as `github-actions[bot]` comments with an `<!-- ocr-... -->` marker. The gate fails on an undispositioned latest-head OCR finding. Only repository owners, members, or collaborators can record a disposition. `fixed` requires a commit on the PR and test evidence; `deferred` requires a linked issue; `declined` requires a concise technical reason. A comment explicitly marked `Blocking:` must be `fixed`; use that marker only for correctness, security, data integrity, or acceptance-criteria findings. Style, wording, speculative defensive suggestions, and refactor preferences may be deferred or declined with a record, rather than generating bulk churn.
+Use no repeated fields or other nonblank text in that comment.
+
+Open Code Review emits latest-head inline findings as `github-actions[bot]` comments with an `<!-- ocr-... -->` marker. The gate fails on an undispositioned latest-head OCR finding. Only repository owners, members, or collaborators can record a disposition. Every disposition requires a one-sentence reason; a comment explicitly marked `Blocking:` must be `fixed`. Use that marker only for correctness, security, data integrity, or acceptance-criteria findings. Style, wording, speculative defensive suggestions, and refactor preferences may be deferred or declined with a record, rather than generating bulk churn.
 
 The `OCR disposition gate` workflow rechecks after Open Code Review completes and whenever a PR comment is created or edited. An active repository ruleset must require its exact `OCR disposition gate` status context on the default branch; do not rely on an agent manually running the command above. The gate accepts retained labels only when they are present in the base-ref `support/ai-engineering-workflow/legacy-agent-labels.json` audit baseline and recorded as legacy data. It validates every other label against the resolved model ID and rejects any unrecorded agent label. Never add a legacy label in the PR body to bypass this check.
 
