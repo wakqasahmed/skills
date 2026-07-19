@@ -180,9 +180,9 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertIn("source-sync automation", result.stderr)
         self.assertIn("scripts/legacy/sync-repositories.py", result.stderr)
 
-    def test_rejects_source_sync_workflows(self) -> None:
+    def test_rejects_unapproved_source_sync_workflows(self) -> None:
         root = self.make_repository()
-        workflow = root / ".github" / "workflows" / "sync-check.yml"
+        workflow = root / ".github" / "workflows" / "sync-legacy.yml"
         workflow.parent.mkdir(parents=True)
         workflow.write_text("name: Legacy sync\n")
         subprocess.run(["git", "add", str(workflow.relative_to(root))], cwd=root, check=True)
@@ -191,7 +191,7 @@ class ValidatePluginTest(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("source-sync automation", result.stderr)
-        self.assertIn(".github/workflows/sync-check.yml", result.stderr)
+        self.assertIn(".github/workflows/sync-legacy.yml", result.stderr)
 
     def test_rejects_a_skill_with_missing_check_commands(self) -> None:
         root = self.make_repository()
