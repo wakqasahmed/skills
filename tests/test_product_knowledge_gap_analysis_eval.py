@@ -2,6 +2,7 @@ import importlib.util
 import copy
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -111,6 +112,15 @@ class ProductKnowledgeGapAnalysisEvalTest(unittest.TestCase):
             (workspace / "SKILL.md").unlink()
             harness.prepare_workspace(workspace, case, "disabled")
             self.assertFalse((workspace / "SKILL.md").exists())
+
+    def test_harness_bounds_each_container_trial(self):
+        harness = load_module(HARNESS, "product_knowledge_timeout_harness")
+        result = type("Result", (), {"stdout": json.dumps({"protocol_version": harness.RUNNER_PROTOCOL_VERSION, "artifact": {}})})()
+        with tempfile.TemporaryDirectory() as directory, patch.object(sys, "argv", ["run_harness.py", "--image", "image@sha256:abc", "--model", "test-model", "--trials", "3", "--output", str(Path(directory) / "results.json")]), patch.object(harness.subprocess, "run", return_value=result) as invoke:
+            self.assertEqual(harness.main(), 0)
+
+        self.assertTrue(invoke.call_args_list)
+        self.assertTrue(all(call.kwargs["timeout"] == harness.TRIAL_TIMEOUT_SECONDS for call in invoke.call_args_list))
 
     def test_checked_in_runner_contract_and_live_gate_are_executable(self):
         runner = TARGET_RUNNER.read_text()

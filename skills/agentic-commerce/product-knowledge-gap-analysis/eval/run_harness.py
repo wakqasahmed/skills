@@ -14,6 +14,7 @@ CASES = EVAL_DIR / "held-out-cases.json"
 HARNESS_VERSION = "1"
 RUNNER_PROTOCOL_VERSION = "product-knowledge-outcome-runner/v2"
 RUNNER = EVAL_DIR / "runner.py"
+TRIAL_TIMEOUT_SECONDS = 30
 
 
 def executor_case(case: dict) -> dict:
@@ -62,6 +63,7 @@ def main() -> int:
                         text=True,
                         capture_output=True,
                         check=True,
+                        timeout=TRIAL_TIMEOUT_SECONDS,
                         env={"PATH": os.environ["PATH"], "HOME": "/nonexistent"},
                     )
                 try:
