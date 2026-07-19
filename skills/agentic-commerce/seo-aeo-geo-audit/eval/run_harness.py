@@ -57,9 +57,9 @@ def main() -> int:
                     runner_record = json.loads(result.stdout)
                 except json.JSONDecodeError as error:
                     raise SystemExit(f"runner must emit one JSON object: {error}") from error
-                if runner_record.get("protocol_version") != RUNNER_PROTOCOL_VERSION or not isinstance(runner_record.get("skill_used"), bool) or not isinstance(runner_record.get("audit_artifact"), dict):
-                    raise SystemExit(f"runner must emit {RUNNER_PROTOCOL_VERSION}, skill_used, and an audit_artifact object")
-                records.append({"case_id": case["id"], "condition": condition, "trial": trial, "model": args.model, "harness_version": HARNESS_VERSION, "runner_protocol_version": RUNNER_PROTOCOL_VERSION, "skill_used": runner_record["skill_used"], "audit_artifact": runner_record["audit_artifact"]})
+                if runner_record.get("protocol_version") != RUNNER_PROTOCOL_VERSION or runner_record.get("model") != args.model or not isinstance(runner_record.get("model_version"), str) or not runner_record["model_version"].strip() or not isinstance(runner_record.get("skill_used"), bool) or not isinstance(runner_record.get("audit_artifact"), dict):
+                    raise SystemExit(f"runner must emit {RUNNER_PROTOCOL_VERSION}, the declared model and version, skill_used, and an audit_artifact object")
+                records.append({"case_id": case["id"], "condition": condition, "trial": trial, "model": runner_record["model"], "model_version": runner_record["model_version"], "harness_version": HARNESS_VERSION, "runner_protocol_version": RUNNER_PROTOCOL_VERSION, "skill_used": runner_record["skill_used"], "audit_artifact": runner_record["audit_artifact"]})
     args.output.write_text(json.dumps(records, indent=2))
     return 0
 

@@ -18,8 +18,12 @@ def validate_contract() -> list[str]:
     failures = []
     if not TARGET_AGENT.is_file():
         failures.append("missing repository target-agent runner")
-    elif "expected" in TARGET_AGENT.read_text():
-        failures.append("target-agent runner must not receive outcome labels")
+    else:
+        runner = TARGET_AGENT.read_text()
+        if "expected" in runner:
+            failures.append("target-agent runner must not receive outcome labels")
+        if "workspace_request" not in runner or "run_target_agent" not in runner:
+            failures.append("target-agent runner must pass workspace skill context to the target agent")
     skill = SKILL.read_text()
     for text in REQUIRED_SKILL_TEXT:
         if text not in skill:

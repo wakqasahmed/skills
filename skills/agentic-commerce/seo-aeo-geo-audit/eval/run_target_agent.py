@@ -1,79 +1,66 @@
 #!/usr/bin/env python3
-"""Deterministic target-agent contract for the isolated SEO audit harness."""
+"""Adapter for the target agent baked into the pinned evaluator image."""
 import json
 import os
+import subprocess
 from pathlib import Path
 
 
 PROTOCOL_VERSION = "seo-aeo-geo-artifact-runner/v1"
+DEFAULT_TARGET_AGENT = "/usr/local/bin/seo-aeo-geo-audit-agent"
 
 
-def source_index(observations: list[dict]) -> dict[str, dict]:
-    return {item["source"]: item for item in observations if isinstance(item, dict) and isinstance(item.get("source"), str)}
-
-
-def is_audit_request(prompt: str, observations: list[dict]) -> bool:
-    request = prompt.casefold()
-    return any(word in request for word in ("audit", "review", "assess")) and not any(item.get("source") == "brief" or item.get("task") for item in observations if isinstance(item, dict))
-
-
-def route_artifact(observations: list[dict]) -> dict:
-    task = next((item.get("task", "") for item in observations if isinstance(item, dict)), "")
-    routes = {
-        "copy rewrite only": "seo-copy",
-        "production deployment": "authorized-deployment",
-        "paid advertising": "paid-acquisition",
-        "metric calculation": "analytics",
-        "refund authorization": "authorized-support-flow",
+def workspace_request(workspace: Path, condition: str, model: str) -> dict:
+    case = json.loads((workspace / "case.json").read_text())
+    request = {
+        "protocol_version": PROTOCOL_VERSION,
+        "model": model,
+        "condition": condition,
+        "prompt": case["prompt"],
+        "input": case["input"],
     }
-    return {"disposition": "route", "route": routes.get(task, "general-assistance"), "findings": [], "recommendations": [], "evidence": [{"source": item["source"]} for item in observations if isinstance(item, dict) and isinstance(item.get("source"), str)]}
+    if condition == "enabled":
+        request["skill"] = (workspace / "SKILL.md").read_text()
+        request["checks"] = (workspace / "checks.md").read_text()
+    return request
 
 
-def audit_artifact(observations: list[dict]) -> dict:
-    sources = source_index(observations)
-    findings, recommendations, evidence = [], [], []
-
-    def add(finding: str, recommendation: str, *evidence_sources: str) -> None:
-        findings.append({"id": finding})
-        recommendations.append({"id": recommendation})
-        evidence.extend({"source": source} for source in evidence_sources)
-
-    headers = next((item for source, item in sources.items() if source.startswith("headers:")), None)
-    sitemap = sources.get("sitemap.xml", {})
-    if headers and headers.get("canonical"):
-        canonical = headers["canonical"]
-        source_path = next(source.removeprefix("headers:") for source in sources if source.startswith("headers:"))
-        if not canonical.endswith(source_path):
-            add("canonical-mismatch", "align-canonical", next(source for source in sources if source.startswith("headers:")))
-        if canonical not in sitemap.get("urls", []):
-            add("sitemap-omission", "add-canonical-url-to-sitemap", next(source for source in sources if source.startswith("headers:")), "sitemap.xml")
-        if "noindex" in headers.get("robots", ""):
-            add("noindex-policy", "review-policy-indexability", next(source for source in sources if source.startswith("headers:")))
-    robots = sources.get("robots.txt", {})
-    bot_check = next((item for source, item in sources.items() if source.startswith("bot-check:")), {})
-    rules = [rule.casefold() for rule in robots.get("rules", [])]
-    if any("gptbot" in rule for rule in rules) and any("disallow" in rule for rule in rules) and bot_check.get("GPTBot_status") == 403:
-        add("ai-crawler-blocked", "review-ai-crawler-policy", "robots.txt", next(source for source in sources if source.startswith("bot-check:")))
-    page = next((item for source, item in sources.items() if source.startswith("page:")), {})
-    html = next((item for source, item in sources.items() if source.startswith("html:")), {})
-    if page.get("visible_claims") == [] and html.get("faq_count") == 0 and html.get("comparison_content") is False:
-        add("answer-content-gap", "add-buyer-questions-and-comparisons", next(source for source in sources if source.startswith("page:")), next(source for source in sources if source.startswith("html:")))
-    jsonld = next((item for source, item in sources.items() if source.startswith("jsonld:")), {})
-    if page.get("visible_price") and jsonld.get("offer_price") and (page["visible_price"].split()[0] != jsonld["offer_price"] or page.get("visible_availability") != jsonld.get("offer_availability")):
-        add("structured-data-offer-mismatch", "synchronize-product-offer-schema", next(source for source in sources if source.startswith("page:")), next(source for source in sources if source.startswith("jsonld:")))
-    return {"disposition": "audit", "findings": findings, "recommendations": recommendations, "evidence": evidence}
-
-
-def run(prompt: str, payload: dict, condition: str) -> dict:
-    observations = payload.get("observations", [])
-    use_skill = condition == "enabled" and is_audit_request(prompt, observations)
-    artifact = audit_artifact(observations) if use_skill else route_artifact(observations)
-    return {"protocol_version": PROTOCOL_VERSION, "skill_used": use_skill, "audit_artifact": artifact}
+def run_target_agent(request: dict, command: str) -> dict:
+    result = subprocess.run(
+        [command, "--model", request["model"]],
+        input=json.dumps(request),
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    try:
+        response = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise SystemExit(f"target agent must emit one JSON object: {error}") from error
+    if not isinstance(response, dict):
+        raise SystemExit("target agent must emit one JSON object")
+    return response
 
 
 def main() -> int:
-    case = json.loads((Path(os.environ.get("HARNESS_WORKSPACE", "/workspace")) / "case.json").read_text())
-    print(json.dumps(run(case["prompt"], case["input"], os.environ["HARNESS_CONDITION"])))
+    workspace = Path(os.environ.get("HARNESS_WORKSPACE", "/workspace"))
+    condition = os.environ["HARNESS_CONDITION"]
+    model = os.environ["HARNESS_MODEL"]
+    response = run_target_agent(
+        workspace_request(workspace, condition, model),
+        os.environ.get("TARGET_AGENT_COMMAND", DEFAULT_TARGET_AGENT),
+    )
+    if response.get("model") != model or not isinstance(response.get("model_version"), str) or not response["model_version"].strip():
+        raise SystemExit("target agent must attest the requested model and a non-empty model_version")
+    if not isinstance(response.get("skill_used"), bool) or not isinstance(response.get("audit_artifact"), dict):
+        raise SystemExit("target agent must emit skill_used and an audit_artifact object")
+    print(json.dumps({
+        "protocol_version": PROTOCOL_VERSION,
+        "model": response["model"],
+        "model_version": response["model_version"],
+        "skill_used": response["skill_used"],
+        "audit_artifact": response["audit_artifact"],
+    }))
     return 0
 
 

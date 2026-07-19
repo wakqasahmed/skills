@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -38,7 +39,7 @@ def artifact_for(case: dict) -> dict:
 def records_for(cases: list[dict]) -> list[dict]:
     return [{
         "case_id": case["id"], "condition": condition, "trial": trial,
-        "model": "test-model", "harness_version": "test-harness",
+        "model": "test-model", "model_version": "test-model-2026-07", "harness_version": "test-harness",
         "runner_protocol_version": "seo-aeo-geo-artifact-runner/v1",
         "skill_used": condition == "enabled" and case["expected_skill_usage"] == "use",
         "audit_artifact": artifact_for(case),
@@ -92,24 +93,43 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         failures, _ = validator.validate(records)
         self.assertTrue(any("skill_used" in failure for failure in failures))
 
-    def test_repository_target_agent_uses_only_workspace_inputs(self):
+    def test_repository_target_agent_forwards_model_and_enabled_skill_to_external_agent(self):
         target_agent = load_module(TARGET_AGENT, "seo_target_agent")
-        validator = load_module(VALIDATOR, "seo_target_agent_validator")
         cases = json.loads(CASES.read_text())["cases"]
         audit_case = next(case for case in cases if case["id"] == "canonical-and-sitemap")
-        route_case = next(case for case in cases if case["id"] == "copy-rewrite")
         self.assertNotIn("expected", TARGET_AGENT.read_text())
-        self.assertTrue(target_agent.run(audit_case["prompt"], audit_case["input"], "enabled")["skill_used"])
-        self.assertFalse(target_agent.run(audit_case["prompt"], audit_case["input"], "disabled")["skill_used"])
-        self.assertFalse(target_agent.run(route_case["prompt"], route_case["input"], "enabled")["skill_used"])
-        for case in cases:
-            enabled = target_agent.run(case["prompt"], case["input"], "enabled")
-            disabled = target_agent.run(case["prompt"], case["input"], "disabled")
-            should_use = case["expected_skill_usage"] == "use"
-            self.assertEqual(enabled["skill_used"], should_use)
-            self.assertFalse(disabled["skill_used"])
-            if should_use:
-                self.assertTrue(validator.grade_artifact(case, enabled["audit_artifact"]))
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            harness = load_module(HARNESS, "seo_target_agent_harness")
+            harness.prepare_workspace(workspace, audit_case, "enabled")
+            request = target_agent.workspace_request(workspace, "enabled", "declared-model")
+        self.assertEqual(request["model"], "declared-model")
+        self.assertEqual(request["prompt"], audit_case["prompt"])
+        self.assertIn("cite the observed output", request["skill"])
+        self.assertIn("Indexability and canonical URL", request["checks"])
+        self.assertNotIn("expected", json.dumps(request))
+
+    def test_target_agent_response_requires_model_version_attestation(self):
+        target_agent = load_module(TARGET_AGENT, "seo_target_agent_attestation")
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            (workspace / "case.json").write_text(json.dumps({"prompt": "Audit this.", "input": {"observations": []}}))
+            (workspace / "SKILL.md").write_text("required skill guidance")
+            (workspace / "checks.md").write_text("required audit checks")
+            response = {"model": "declared-model", "model_version": "declared-model-2026-07", "skill_used": True, "audit_artifact": {"disposition": "audit"}}
+            agent = workspace / "agent"
+            agent.write_text("#!/usr/bin/env python3\nimport json, sys\nrequest = json.load(sys.stdin)\nassert request['model'] == 'declared-model'\nassert request['skill'] == 'required skill guidance'\nassert request['checks'] == 'required audit checks'\nprint(json.dumps(" + repr(response) + "))\n")
+            agent.chmod(0o755)
+            previous = os.environ.copy()
+            try:
+                os.environ.update({"HARNESS_WORKSPACE": str(workspace), "HARNESS_CONDITION": "enabled", "HARNESS_MODEL": "declared-model", "TARGET_AGENT_COMMAND": str(agent)})
+                result = subprocess.run(["python3", str(TARGET_AGENT)], text=True, capture_output=True)
+            finally:
+                os.environ.clear()
+                os.environ.update(previous)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        record = json.loads(result.stdout)
+        self.assertEqual(record["model_version"], "declared-model-2026-07")
 
     def test_isolated_harness_only_exposes_inputs_and_enabled_skill(self):
         harness = load_module(HARNESS, "seo_isolation_harness")
@@ -137,4 +157,5 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         self.assertIn("upload-artifact", workflow)
         self.assertIn("seo-aeo-geo-audit-results.json", workflow)
         self.assertIn("run_target_agent.py", workflow)
+        self.assertIn("SEO_AEO_GEO_AUDIT_EVAL_MODEL", workflow)
         self.assertNotIn("SEO_AEO_GEO_AUDIT_EVAL_RUNNER", workflow)
