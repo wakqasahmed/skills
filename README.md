@@ -10,6 +10,14 @@ npx skills@latest add wakqasahmed/skills
 
 The installer discovers the complete catalogue. Automated agent installs select all listed skills.
 
+## Quickstart
+
+1. Install with the command above.
+2. Run `workflow-router setup` once in the target repository. It detects the tracker, branch, labels, instructions, docs, and test/runtime conventions, then shows any proposed changes for approval.
+3. Ask `workflow-router` for the current situation.
+
+Example: `workflow-router Checkout now returns 500 after coupon changes.` routes to diagnose → regression test → smallest fix → review gate, because the failure must be reproduced before changing code and retained as a regression check.
+
 ## Browse Skills
 
 skills.sh does not support repository-defined marketplace groups. Use this category-first catalogue to choose a relevant skill, then keep the canonical installer above for the complete set.
@@ -75,6 +83,7 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [Review Gate](skills/engineering/review-gate/)
 - [Subagent Pipeline](skills/engineering/subagent-pipeline/)
 - [To PRD](skills/engineering/to-prd/)
+- [Workflow Router](skills/engineering/workflow-router/)
 
 ### PHP/Laravel/Filament
 
