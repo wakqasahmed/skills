@@ -51,6 +51,8 @@ Implementation/update agent:
 - Name: <!-- e.g. Claude Sonnet 5 Medium, Codex GPT-5.6 Terra Medium, or N/A -->
 - Resolved model ID: <!-- Runtime/orchestrator value, or unavailable with limitation below -->
 - Metadata limitation: <!-- Why the ID is unavailable, or N/A -->
+- Verified agent labels: <!-- New labels created for this PR; comma-separated, or N/A -->
+- Legacy agent labels: <!-- Pre-existing retained audit labels; comma-separated, or N/A -->
 - Run: <!-- GitHub Actions run URL, local session reference, or N/A -->
 
 Code review agent:
@@ -143,7 +145,7 @@ Reason: concise technical reason # required for declined
 
 Open Code Review emits latest-head inline findings as `github-actions[bot]` comments with an `<!-- ocr-... -->` marker. The gate fails on an undispositioned latest-head OCR finding. Only repository owners, members, or collaborators can record a disposition. `fixed` requires a commit on the PR and test evidence; `deferred` requires a linked issue; `declined` requires a concise technical reason. A comment explicitly marked `Blocking:` must be `fixed`; use that marker only for correctness, security, data integrity, or acceptance-criteria findings. Style, wording, speculative defensive suggestions, and refactor preferences may be deferred or declined with a record, rather than generating bulk churn.
 
-The `OCR disposition gate` workflow rechecks after Open Code Review completes and whenever a PR comment is created or edited. Protect the target branch by requiring its `OCR disposition gate` status context; do not rely on an agent manually running the command above.
+The `OCR disposition gate` workflow rechecks after Open Code Review completes and whenever a PR comment is created or edited. An active repository ruleset must require its exact `OCR disposition gate` status context on the default branch; do not rely on an agent manually running the command above. The gate accepts retained labels only when they are recorded as legacy audit data, validates every new label against the resolved model ID, and rejects any unrecorded agent label.
 
 ## Verification
 
