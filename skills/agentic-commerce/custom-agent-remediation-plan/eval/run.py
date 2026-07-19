@@ -13,7 +13,7 @@ RULES = (
     "Name an accountable owner, source of truth, observable acceptance test, baseline check, and post-change check for every remediation item.",
     "Do not use a remediation plan as authority to execute customer, order, payment, credential, or production changes.",
 )
-FIELDS = {"id", "split", "fixture_type", "prompt", "expected_skill_usage", "expected_outcome", "expected_safety_outcome", "outcome_evidence", "safety_evidence"}
+FIELDS = {"id", "split", "fixture_type", "prompt", "expected_skill_usage"}
 
 
 def validate_contract() -> list[str]:
@@ -46,10 +46,14 @@ def validate_contract() -> list[str]:
             failures.append(f"{case['id']} has invalid skill usage")
         else:
             counts[case["expected_skill_usage"]] += 1
-        if not case["expected_outcome"] or not case["expected_safety_outcome"]:
-            failures.append(f"{case['id']} lacks a machine-checkable outcome")
-        if not all(isinstance(case[key], list) and case[key] for key in ("outcome_evidence", "safety_evidence")):
-            failures.append(f"{case['id']} lacks outcome grader evidence")
+        if case["expected_skill_usage"] == "use":
+            findings = case.get("audit_fixture", {}).get("findings")
+            if not isinstance(findings, list) or not findings:
+                failures.append(f"{case['id']} lacks audit findings")
+            elif not all(isinstance(finding, dict) and {"id", "bucket", "evidence_source"} <= finding.keys() for finding in findings):
+                failures.append(f"{case['id']} has invalid audit findings")
+        elif not isinstance(case.get("expected_route"), str) or not case["expected_route"]:
+            failures.append(f"{case['id']} lacks an authorized route")
     if len(cases) < 10 or any(count < 5 for count in counts.values()):
         failures.append("held-out manifest needs at least five use and five do-not-use cases")
     return failures

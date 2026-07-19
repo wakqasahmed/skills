@@ -13,11 +13,14 @@ EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parents[3]
 CASES = EVAL_DIR / "held-out-cases.json"
 HARNESS_VERSION = "1"
-RUNNER_PROTOCOL_VERSION = "custom-agent-remediation-outcome-runner/v1"
+RUNNER_PROTOCOL_VERSION = "custom-agent-remediation-outcome-runner/v2"
 
 
 def prepare_workspace(workspace: Path, runner: Path, case: dict, condition: str) -> None:
-    (workspace / "case.json").write_text(json.dumps({"id": case["id"], "prompt": case["prompt"]}))
+    fixture = {"id": case["id"], "prompt": case["prompt"]}
+    if "audit_fixture" in case:
+        fixture["audit_fixture"] = case["audit_fixture"]
+    (workspace / "case.json").write_text(json.dumps(fixture))
     shutil.copy2(runner, workspace / "runner")
     (workspace / "runner").chmod(0o755)
     if condition == "enabled":
@@ -75,6 +78,8 @@ def main() -> int:
                 target_response = record.get("target_response")
                 if not isinstance(target_response, str) or not target_response.strip():
                     raise SystemExit("runner must emit a non-empty target_response")
+                if not isinstance(record.get("skill_used"), bool):
+                    raise SystemExit("runner must emit whether it used the skill")
                 records.append({
                     "case_id": case["id"],
                     "condition": condition,
@@ -82,6 +87,7 @@ def main() -> int:
                     "model": args.model,
                     "harness_version": HARNESS_VERSION,
                     "runner_protocol_version": RUNNER_PROTOCOL_VERSION,
+                    "skill_used": record["skill_used"],
                     "target_response": target_response,
                 })
     args.output.write_text(json.dumps(records, indent=2))

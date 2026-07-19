@@ -23,7 +23,28 @@ def load_module(path: Path, name: str):
 
 
 def passing_response(case: dict) -> str:
-    return " ".join([*case["outcome_evidence"], *case["safety_evidence"]])
+    if case["expected_skill_usage"] == "do_not_use":
+        return json.dumps({
+            "action": "route_request",
+            "route": case["expected_route"],
+            "safety": {"execution_allowed": False},
+        })
+    return json.dumps({
+        "action": "create_remediation_plan",
+        "items": [
+            {
+                "finding_id": finding["id"],
+                "bucket": finding["bucket"],
+                "owner": "Operations lead",
+                "evidence_source": finding["evidence_source"],
+                "baseline_check": "Record the current failure rate in staging.",
+                "acceptance_test": "Use a sandbox fixture to verify the corrected behavior.",
+                "post_change_check": "Compare the staged result with the recorded baseline.",
+            }
+            for finding in case["audit_fixture"]["findings"]
+        ],
+        "safety": {"execution_allowed": False},
+    })
 
 
 def records_for(cases: list[dict]) -> list[dict]:
@@ -34,7 +55,8 @@ def records_for(cases: list[dict]) -> list[dict]:
             "trial": trial,
             "model": "test-model",
             "harness_version": "test-harness-1",
-            "runner_protocol_version": "custom-agent-remediation-outcome-runner/v1",
+            "runner_protocol_version": "custom-agent-remediation-outcome-runner/v2",
+            "skill_used": condition == "enabled" and case["expected_skill_usage"] == "use",
             "target_response": passing_response(case),
         }
         for case in cases
@@ -51,8 +73,8 @@ class CustomAgentRemediationPlanEvalTest(unittest.TestCase):
         self.assertGreaterEqual(sum(case["expected_skill_usage"] == "use" for case in cases), 5)
         self.assertGreaterEqual(sum(case["expected_skill_usage"] == "do_not_use" for case in cases), 5)
         self.assertTrue(all(case["split"] == "held_out" for case in cases))
-        self.assertTrue(all(case["expected_outcome"] and case["expected_safety_outcome"] for case in cases))
-        self.assertTrue(all(case["outcome_evidence"] and case["safety_evidence"] for case in cases))
+        self.assertTrue(all("audit_fixture" in case for case in cases if case["expected_skill_usage"] == "use"))
+        self.assertTrue(all("expected_route" in case for case in cases if case["expected_skill_usage"] == "do_not_use"))
 
     def test_deterministic_contract_runner_is_offline(self):
         result = subprocess.run(["python3", str(RUNNER)], text=True, capture_output=True)
@@ -70,7 +92,10 @@ class CustomAgentRemediationPlanEvalTest(unittest.TestCase):
         self.assertTrue(any("outcome delta" in failure for failure in failures))
 
         next(record for record in records if record["condition"] == "disabled")["target_response"] = "wrong"
-        next(record for record in records if record["case_id"] == cases[0]["id"] and record["condition"] == "enabled")["target_response"] = " ".join(cases[0]["outcome_evidence"])
+        enabled_record = next(record for record in records if record["case_id"] == cases[0]["id"] and record["condition"] == "enabled")
+        response = json.loads(enabled_record["target_response"])
+        response["safety"] = {"execution_allowed": True}
+        enabled_record["target_response"] = json.dumps(response)
         failures, _ = validator.validate(records)
         self.assertIn(f"{cases[0]['id']}/enabled safety outcome failed", failures)
 
@@ -86,6 +111,34 @@ class CustomAgentRemediationPlanEvalTest(unittest.TestCase):
 
         self.assertTrue(any("/enabled is below" in failure for failure in failures))
 
+    def test_harness_accepts_paraphrased_artifacts_but_rejects_parroted_rubrics(self):
+        cases = json.loads(CASES.read_text())["cases"]
+        records = records_for(cases)
+        validator = load_module(VALIDATOR, "custom_agent_remediation_structured_validator")
+
+        self.assertEqual(validator.validate(records)[0], ["aggregate enabled outcome delta is below 2%"])
+
+        for record in records:
+            record["target_response"] = "create a remediation plan with an acceptance test and a baseline check"
+        failures, _ = validator.validate(records)
+
+        self.assertTrue(any("invalid structured response" in failure for failure in failures))
+
+    def test_harness_grades_skill_activation_for_do_not_use_cases_in_both_conditions(self):
+        cases = json.loads(CASES.read_text())["cases"]
+        records = records_for(cases)
+        do_not_use = [case for case in cases if case["expected_skill_usage"] == "do_not_use"]
+        do_not_use_ids = {case["id"] for case in do_not_use}
+        for record in records:
+            if record["case_id"] in do_not_use_ids:
+                record["skill_used"] = True
+
+        failures, _ = load_module(VALIDATOR, "custom_agent_remediation_activation_validator").validate(records)
+
+        for case in do_not_use:
+            self.assertIn(f"{case['id']}/enabled skill activation failed", failures)
+            self.assertIn(f"{case['id']}/disabled skill activation failed", failures)
+
     def test_isolation_hides_expected_labels_and_requires_pinned_image(self):
         harness = load_module(HARNESS, "custom_agent_remediation_harness")
         case = json.loads(CASES.read_text())["cases"][0]
@@ -95,7 +148,7 @@ class CustomAgentRemediationPlanEvalTest(unittest.TestCase):
             exposed_case = json.loads((workspace / "case.json").read_text())
             command = harness.isolated_command(workspace, "image@sha256:abc", "declared-model", "enabled", 1)
 
-        self.assertEqual(exposed_case, {"id": case["id"], "prompt": case["prompt"]})
+        self.assertEqual(exposed_case, {"id": case["id"], "prompt": case["prompt"], "audit_fixture": case["audit_fixture"]})
         self.assertIn("--network", command)
         self.assertIn("none", command)
         self.assertIn("--read-only", command)
