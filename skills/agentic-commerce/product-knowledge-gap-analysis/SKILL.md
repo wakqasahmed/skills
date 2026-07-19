@@ -13,6 +13,8 @@ description: Find ecommerce product data gaps that block AI answers, recommendat
 4. Group gaps by template-level fixes vs product-specific enrichment.
 5. Recommend the smallest product knowledge load needed for a custom agent.
 
+Run the checks in `references/checks.md` and cite the observed output for each finding.
+
 ## Output
 
 - Missing attribute or answer

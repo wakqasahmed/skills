@@ -24,6 +24,17 @@ if listed != actual:
         details.append("Stale manifest entries: " + ", ".join(stale))
     raise SystemExit("; ".join(details))
 
+missing_check_commands = []
+for skill_path in (root / "skills").glob("*/*/SKILL.md"):
+    if "references/checks.md" not in skill_path.read_text():
+        continue
+    checks_path = skill_path.parent / "references" / "checks.md"
+    if not checks_path.is_file():
+        missing_check_commands.append(str(checks_path.relative_to(root)))
+
+if missing_check_commands:
+    raise SystemExit("Skills reference missing check commands: " + ", ".join(missing_check_commands))
+
 readme = (root / "README.md").read_text()
 canonical_install = "npx skills@latest add wakqasahmed/skills"
 if readme.count(canonical_install) != 1:

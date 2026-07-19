@@ -12,6 +12,8 @@ description: Assess whether ecommerce policies are clear enough for AI answers, 
 3. Check whether policies are linked from product, cart, checkout, and support surfaces.
 4. Convert policy gaps into answer-ready snippets and escalation rules.
 
+Run the checks in `references/checks.md` and cite the observed output for each finding.
+
 ## Output
 
 - Policy gap

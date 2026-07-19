@@ -12,6 +12,8 @@ description: Identify when an ecommerce prospect needs Forward Deployed Engineer
 3. Identify dependencies, data contracts, approval gates, and operational risk.
 4. Propose a small FDE sprint with clear outcome and verification.
 
+Run the checks in `references/checks.md` against the proposed integration inventory before sizing an FDE sprint.
+
 ## Output
 
 - Integration/workflow need
