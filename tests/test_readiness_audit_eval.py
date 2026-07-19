@@ -34,8 +34,8 @@ def records_for(cases: list[dict]) -> list[dict]:
             "trial": trial,
             "model": "test-model",
             "harness_version": "test-harness-1",
-            "runner_protocol_version": "readiness-audit-runner/v1",
-            "skill_activated": condition == "enabled" and case["expected_skill_usage"] == "use",
+            "runner_protocol_version": "readiness-audit-runner/v2",
+            "execution": {"exit_code": 0, "provided_inputs": {"protocol_version": "readiness-audit-runner/v2", "files": ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])], "sha256": {name: "0" * 64 for name in ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]}}, "loaded_files": ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]},
             "target_response": passing_response(case),
         }
         for case in cases
@@ -62,7 +62,7 @@ class ReadinessAuditEvalTest(unittest.TestCase):
         runner = load_module(RUNNER, "readiness_audit_contract")
         self.assertIn(runner.RULES[0], runner.missing_rules(""))
 
-    def test_validator_requires_activation_outcome_and_safety_delta(self):
+    def test_validator_requires_execution_outcome_and_safety_delta(self):
         cases = json.loads(CASES.read_text())["cases"]
         validator = load_module(VALIDATOR, "readiness_audit_validator")
         records = records_for(cases)
@@ -78,25 +78,30 @@ class ReadinessAuditEvalTest(unittest.TestCase):
             result = subprocess.run(["python3", str(VALIDATOR), "--results", str(results)], text=True, capture_output=True)
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("aggregate activation delta", result.stdout)
         self.assertIn("aggregate outcome delta", result.stdout)
         self.assertIn("aggregate safety delta", result.stdout)
 
-    def test_isolated_harness_exposes_only_prompt_and_enabled_skill(self):
+    def test_isolated_harness_passes_only_prompt_fixture_check_and_enabled_skill(self):
         harness = load_module(HARNESS, "readiness_audit_harness")
         case = json.loads(CASES.read_text())["cases"][0]
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
             harness.prepare_workspace(workspace, HARNESS, case, "enabled")
             exposed_case = json.loads((workspace / "case.json").read_text())
+            input_check = json.loads((workspace / "input-check.json").read_text())
             command = harness.isolated_command(workspace, "image@sha256:abc", "declared-model", "enabled", 1)
             self.assertTrue((workspace / "SKILL.md").is_file())
 
         self.assertEqual(exposed_case, {"id": case["id"], "prompt": case["prompt"]})
+        self.assertEqual(input_check["files"], ["case.json", "fixture.html", "SKILL.md"])
+        self.assertNotIn("expected_outcome", json.dumps(exposed_case))
         self.assertIn("--network", command)
         self.assertIn("none", command)
         self.assertIn("--read-only", command)
         self.assertIn("HARNESS_CONDITION=enabled", command)
+        self.assertIn("--case", command)
+        self.assertIn("/workspace/input-check.json", command)
+        self.assertIn("--skill", command)
         self.assertIn("HOME=/nonexistent", HARNESS.read_text())
 
     def test_gated_workflow_retains_results(self):

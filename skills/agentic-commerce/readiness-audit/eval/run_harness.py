@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run readiness-audit cases in clean, network-isolated workspaces."""
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -13,16 +14,24 @@ EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parents[3]
 CASES = EVAL_DIR / "held-out-cases.json"
 HARNESS_VERSION = "1"
-RUNNER_PROTOCOL_VERSION = "readiness-audit-runner/v1"
+RUNNER_PROTOCOL_VERSION = "readiness-audit-runner/v2"
 
 
-def prepare_workspace(workspace: Path, runner: Path, case: dict, condition: str) -> None:
+def digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def prepare_workspace(workspace: Path, runner: Path, case: dict, condition: str) -> dict:
     (workspace / "case.json").write_text(json.dumps({"id": case["id"], "prompt": case["prompt"]}))
     shutil.copy2(EVAL_DIR / case["fixture"], workspace / "fixture.html")
     shutil.copy2(runner, workspace / "runner")
     (workspace / "runner").chmod(0o755)
     if condition == "enabled":
         shutil.copy2(EVAL_DIR.parent / "SKILL.md", workspace / "SKILL.md")
+    files = ["case.json", "fixture.html", *(["SKILL.md"] if condition == "enabled" else [])]
+    check = {"protocol_version": RUNNER_PROTOCOL_VERSION, "files": files, "sha256": {name: digest(workspace / name) for name in files}}
+    (workspace / "input-check.json").write_text(json.dumps(check))
+    return check
 
 
 def isolated_command(workspace: Path, image: str, model: str, condition: str, trial: int) -> list[str]:
@@ -34,6 +43,9 @@ def isolated_command(workspace: Path, image: str, model: str, condition: str, tr
         "--env", "HARNESS_FIXTURE=/workspace/fixture.html", "--env", f"HARNESS_MODEL={model}",
         "--env", f"HARNESS_CONDITION={condition}", "--env", f"HARNESS_TRIAL={trial}",
         "--workdir", "/workspace", image, "/workspace/runner",
+        "--case", "/workspace/case.json", "--fixture", "/workspace/fixture.html",
+        "--check", "/workspace/input-check.json",
+        *(["--skill", "/workspace/SKILL.md"] if condition == "enabled" else []),
     ]
 
 
@@ -57,7 +69,7 @@ def main() -> int:
             for trial in range(1, args.trials + 1):
                 with tempfile.TemporaryDirectory() as directory:
                     workspace = Path(directory)
-                    prepare_workspace(workspace, runner, case, condition)
+                    input_check = prepare_workspace(workspace, runner, case, condition)
                     result = subprocess.run(isolated_command(workspace, args.image, args.model, condition, trial), text=True, capture_output=True, check=True, env={"PATH": os.environ["PATH"], "HOME": "/nonexistent"})
                 try:
                     record = json.loads(result.stdout)
@@ -65,9 +77,9 @@ def main() -> int:
                     raise SystemExit(f"runner must emit one JSON object per case/trial: {error}") from error
                 if not isinstance(record, dict) or record.get("protocol_version") != RUNNER_PROTOCOL_VERSION:
                     raise SystemExit(f"runner must use {RUNNER_PROTOCOL_VERSION}")
-                if not isinstance(record.get("skill_activated"), bool) or not isinstance(record.get("target_response"), str) or not record["target_response"].strip():
-                    raise SystemExit("runner must emit activation telemetry and a non-empty target_response")
-                records.append({"case_id": case["id"], "condition": condition, "trial": trial, "model": args.model, "harness_version": HARNESS_VERSION, "runner_protocol_version": RUNNER_PROTOCOL_VERSION, "skill_activated": record["skill_activated"], "target_response": record["target_response"]})
+                if record.get("loaded_files") != input_check["files"] or not isinstance(record.get("target_response"), str) or not record["target_response"].strip():
+                    raise SystemExit("runner must confirm the exact passed inputs and emit a non-empty target_response")
+                records.append({"case_id": case["id"], "condition": condition, "trial": trial, "model": args.model, "harness_version": HARNESS_VERSION, "runner_protocol_version": RUNNER_PROTOCOL_VERSION, "execution": {"exit_code": result.returncode, "provided_inputs": input_check, "loaded_files": record["loaded_files"]}, "target_response": record["target_response"]})
     args.output.write_text(json.dumps(records, indent=2))
     return 0
 
