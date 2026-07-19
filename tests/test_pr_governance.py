@@ -197,19 +197,19 @@ class OcrDispositionTests(unittest.TestCase):
                     "id": 44,
                     "commit_id": "latest",
                     "user": {"login": "github-actions[bot]"},
-                    "body": "<!-- ocr-run-1 -->\\nFinding",
+                    "body": "<!-- ocr-run-1 -->\nFinding",
                 },
                 {
                     "id": 45,
                     "commit_id": "latest",
                     "user": {"login": "github-actions[bot]"},
-                    "body": "<!-- ocr-run-1 -->\\nFinding",
+                    "body": "<!-- ocr-run-1 -->\nFinding",
                 },
             ],
             "issue_comments": [
                 {
                     "author_association": "MEMBER",
-                    "body": "\\n".join([
+                    "body": "\n".join([
                         "<!-- ocr-disposition:44 -->",
                         "Disposition: fixed",
                         "Disposition: fixed",
@@ -218,7 +218,7 @@ class OcrDispositionTests(unittest.TestCase):
                 },
                 {
                     "author_association": "MEMBER",
-                    "body": "\\n".join([
+                    "body": "\n".join([
                         "<!-- ocr-disposition:45 -->",
                         "Disposition: fixed",
                         "Reason: Fixed.",
