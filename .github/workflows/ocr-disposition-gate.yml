@@ -51,12 +51,17 @@ jobs:
 
           gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" > /tmp/pr.json
           HEAD_SHA="$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" --jq .head.sha)"
+          BASE_SHA="$(jq -r .base.sha /tmp/pr.json)"
           if [ "$EVENT_NAME" = workflow_run ] && [ "$OCR_HEAD_SHA" != "$HEAD_SHA" ]; then
             exit 0
           fi
 
           gh api "repos/$REPOSITORY/contents/support/ai-engineering-workflow/scripts/verify-pr-governance.py?ref=$HEAD_SHA" \
             -H 'Accept: application/vnd.github.raw+json' > /tmp/verify-pr-governance.py
+          if ! gh api "repos/$REPOSITORY/contents/support/ai-engineering-workflow/legacy-agent-labels.json?ref=$BASE_SHA" \
+            -H 'Accept: application/vnd.github.raw+json' > /tmp/legacy-agent-labels.json; then
+            printf '[]\n' > /tmp/legacy-agent-labels.json
+          fi
           gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/comments?per_page=100" --paginate --slurp > /tmp/ocr-review-comment-pages.json
           gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" --paginate --slurp > /tmp/ocr-issue-comment-pages.json
           gh api "repos/$REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" --paginate --slurp > /tmp/pr-commit-pages.json
@@ -70,7 +75,8 @@ jobs:
             --review-comments /tmp/ocr-review-comments.json \
             --issue-comments /tmp/ocr-issue-comments.json \
             --pr-commits /tmp/pr-commits.json \
-            --pr /tmp/pr.json
+            --pr /tmp/pr.json \
+            --legacy-agent-labels /tmp/legacy-agent-labels.json
           gate_exit=$?
           set -e
 
