@@ -37,15 +37,23 @@ def isolated_command(workspace: Path, image: str, model: str) -> list[str]:
     ]
 
 
+def openrouter_command(workspace: Path) -> list[str]:
+    return ["python3", str(workspace / "runner")]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image", required=True)
+    parser.add_argument("--runner", choices=("isolated", "openrouter"), default="isolated")
+    parser.add_argument("--image")
     parser.add_argument("--model", required=True)
+    parser.add_argument("--model-version")
     parser.add_argument("--trials", type=int, choices=range(3, 7), default=5)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    if "@sha256:" not in args.image:
+    if args.runner == "isolated" and (not args.image or "@sha256:" not in args.image):
         raise SystemExit("image must be pinned by digest")
+    if args.runner == "openrouter" and not args.model_version:
+        raise SystemExit("--model-version is required for the openrouter runner")
 
     records = []
     for case in json.loads(CASES.read_text())["cases"]:
@@ -54,7 +62,14 @@ def main() -> int:
                 with tempfile.TemporaryDirectory() as directory:
                     workspace = Path(directory)
                     target_workspace = prepare_workspace(workspace, case, condition)
-                    result = subprocess.run(isolated_command(target_workspace, args.image, args.model), text=True, capture_output=True, check=True, env={"PATH": os.environ["PATH"], "HOME": "/nonexistent"})
+                    environment = {"PATH": os.environ["PATH"], "HOME": "/nonexistent", "HARNESS_WORKSPACE": str(target_workspace), "HARNESS_MODEL": args.model, "HARNESS_RUNNER": args.runner}
+                    if args.runner == "openrouter":
+                        environment["HARNESS_MODEL_VERSION"] = args.model_version
+                        environment["OPENROUTER_API_KEY"] = os.environ.get("OPENROUTER_API_KEY", "")
+                        command = openrouter_command(target_workspace)
+                    else:
+                        command = isolated_command(target_workspace, args.image, args.model)
+                    result = subprocess.run(command, text=True, capture_output=True, check=True, env=environment)
                 try:
                     runner_record = json.loads(result.stdout)
                 except json.JSONDecodeError as error:
