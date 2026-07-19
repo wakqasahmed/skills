@@ -1,0 +1,50 @@
+name: Custom-agent remediation-plan harness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_harness:
+        description: Run the approved isolated evaluator
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: custom-agent-remediation-plan-harness
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    if: inputs.run_harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 skills/agentic-commerce/custom-agent-remediation-plan/eval/run.py
+      - name: Run approved isolated remediation-plan evaluator
+        env:
+          CUSTOM_AGENT_REMEDIATION_EVAL_RUNNER: ${{ vars.CUSTOM_AGENT_REMEDIATION_EVAL_RUNNER }}
+          CUSTOM_AGENT_REMEDIATION_EVAL_IMAGE: ${{ vars.CUSTOM_AGENT_REMEDIATION_EVAL_IMAGE }}
+          CUSTOM_AGENT_REMEDIATION_EVAL_MODEL: ${{ vars.CUSTOM_AGENT_REMEDIATION_EVAL_MODEL }}
+        run: |
+          test -n "$CUSTOM_AGENT_REMEDIATION_EVAL_RUNNER"
+          test -n "$CUSTOM_AGENT_REMEDIATION_EVAL_IMAGE"
+          test -n "$CUSTOM_AGENT_REMEDIATION_EVAL_MODEL"
+          case "$CUSTOM_AGENT_REMEDIATION_EVAL_RUNNER" in ./*) ;; *) exit 1 ;; esac
+          python3 skills/agentic-commerce/custom-agent-remediation-plan/eval/run_harness.py \
+            --runner "$CUSTOM_AGENT_REMEDIATION_EVAL_RUNNER" \
+            --image "$CUSTOM_AGENT_REMEDIATION_EVAL_IMAGE" \
+            --model "$CUSTOM_AGENT_REMEDIATION_EVAL_MODEL" \
+            --trials 5 \
+            --output custom-agent-remediation-plan-results.json
+          python3 skills/agentic-commerce/custom-agent-remediation-plan/eval/validate-harness-results.py \
+            --results custom-agent-remediation-plan-results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: custom-agent-remediation-plan-harness-${{ github.run_id }}
+          path: custom-agent-remediation-plan-results.json
+          if-no-files-found: error
