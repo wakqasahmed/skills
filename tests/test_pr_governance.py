@@ -145,7 +145,7 @@ class AgentLabelTests(unittest.TestCase):
 
         self.assertEqual(failures, ["Invalid agent label: agent:gpt5-high-reviewer"])
 
-    def test_accepts_a_recorded_legacy_label_with_a_verified_current_label(self):
+    def test_accepts_a_baselined_legacy_label_with_a_verified_current_label(self):
         failures = governance.validate_pr_agent_metadata({
             "body": "\n".join([
                 "- Resolved model ID: gpt5.6-terra",
@@ -157,9 +157,25 @@ class AgentLabelTests(unittest.TestCase):
                 {"name": "agent:gpt5.6-terra-medium-fixer"},
                 {"name": "agent:gpt5-high-reviewer"},
             ],
-        })
+        }, legacy_agent_labels={"agent:gpt5-high-reviewer"})
 
         self.assertEqual(failures, [])
+
+    def test_rejects_a_new_label_declared_as_legacy(self):
+        failures = governance.validate_pr_agent_metadata({
+            "body": "\n".join([
+                "- Resolved model ID: gpt5.6-terra",
+                "- Metadata limitation: N/A",
+                "- Verified agent labels: agent:gpt5.6-terra-medium-fixer",
+                "- Legacy agent labels: agent:gpt5-high-reviewer",
+            ]),
+            "labels": [
+                {"name": "agent:gpt5.6-terra-medium-fixer"},
+                {"name": "agent:gpt5-high-reviewer"},
+            ],
+        }, legacy_agent_labels=set())
+
+        self.assertIn("Invalid agent label: agent:gpt5-high-reviewer", failures)
 
     def test_rejects_an_unrecorded_agent_label(self):
         failures = governance.validate_pr_agent_metadata({
@@ -175,7 +191,10 @@ class AgentLabelTests(unittest.TestCase):
             ],
         })
 
-        self.assertEqual(failures, ["Unverified agent label: agent:gpt5-high-reviewer"])
+        self.assertEqual(failures, [
+            "Invalid agent label: agent:gpt5-high-reviewer",
+            "Unverified agent label: agent:gpt5-high-reviewer",
+        ])
 
 
 class RepositoryPolicyTests(unittest.TestCase):
@@ -215,6 +234,9 @@ class OcrDispositionWorkflowTests(unittest.TestCase):
         self.assertIn("/tmp/verify-pr-governance.py", workflow)
         self.assertIn("--paginate --slurp", workflow)
         self.assertIn("--pr /tmp/pr.json", workflow)
+        self.assertIn("BASE_SHA", workflow)
+        self.assertIn("legacy-agent-labels.json?ref=$BASE_SHA", workflow)
+        self.assertIn("--legacy-agent-labels /tmp/legacy-agent-labels.json", workflow)
 
 
 if __name__ == "__main__":
