@@ -139,4 +139,5 @@ class ProductKnowledgeGapAnalysisEvalTest(unittest.TestCase):
         self.assertEqual(set(request), {"id", "prompt", "catalog", "feed", "skill"})
         self.assertNotIn("expected_artifact", request)
         self.assertEqual(request["skill"], None)
+        self.assertEqual(invoke.call_args.kwargs["timeout"], runner.TARGET_TIMEOUT_SECONDS)
         self.assertEqual(json.loads(output.call_args.args[0])["artifact"], case["expected_artifact"])

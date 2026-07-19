@@ -8,6 +8,7 @@ from pathlib import Path
 
 PROTOCOL_VERSION = "product-knowledge-outcome-runner/v2"
 TARGET = "/usr/local/bin/product-knowledge-target"
+TARGET_TIMEOUT_SECONDS = 30
 
 
 def main() -> int:
@@ -18,6 +19,7 @@ def main() -> int:
     result = subprocess.run(
         [TARGET, "--model", os.environ["HARNESS_MODEL"]],
         input=json.dumps(request), text=True, capture_output=True, check=True,
+        timeout=TARGET_TIMEOUT_SECONDS,
     )
     artifact = json.loads(result.stdout)
     if not isinstance(artifact, dict):
