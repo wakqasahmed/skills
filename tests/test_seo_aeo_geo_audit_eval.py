@@ -209,6 +209,12 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         sleep.assert_called_once_with(3)
         self.assertTrue(response["skill_used"])
 
+    def test_openrouter_runner_honors_the_provider_rate_limit_reset(self):
+        target_agent = load_module(TARGET_AGENT, "seo_openrouter_reset")
+        with patch.object(target_agent.time, "time", return_value=1_784_449_740):
+            delay = target_agent.rate_limit_delay({"X-RateLimit-Reset": "1784449800000"}, 0)
+        self.assertEqual(delay, 60)
+
     def test_isolated_harness_keeps_case_labels_and_condition_outside_target_workspace(self):
         harness = load_module(HARNESS, "seo_isolation_harness")
         case = json.loads(CASES.read_text())["cases"][0]

@@ -51,6 +51,16 @@ def run_target_agent(request: dict, command: str) -> dict:
     return response
 
 
+def rate_limit_delay(headers: object, attempt: int) -> int:
+    retry_after = headers.get("Retry-After") if headers else None
+    if retry_after and retry_after.isdigit():
+        return int(retry_after)
+    reset_at = headers.get("X-RateLimit-Reset") if headers else None
+    if reset_at and reset_at.isdigit():
+        return max(1, int(int(reset_at) / 1000 - time.time()))
+    return 2 ** attempt
+
+
 def run_openrouter_agent(request: dict) -> dict:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
@@ -80,9 +90,7 @@ def run_openrouter_agent(request: dict) -> dict:
         except urllib.error.HTTPError as error:
             if error.code != 429 or attempt == OPENROUTER_MAX_ATTEMPTS - 1:
                 raise SystemExit(f"OpenRouter request failed: HTTP {error.code}") from error
-            retry_after = error.headers.get("Retry-After")
-            delay = int(retry_after) if retry_after and retry_after.isdigit() else 2 ** attempt
-            time.sleep(delay)
+            time.sleep(rate_limit_delay(error.headers, attempt))
         except (urllib.error.URLError, json.JSONDecodeError) as error:
             raise SystemExit(f"OpenRouter request failed: {error}") from error
     try:
