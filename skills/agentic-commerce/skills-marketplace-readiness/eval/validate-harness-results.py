@@ -3,7 +3,7 @@
 import argparse
 import json
 from collections import defaultdict
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 
 EVAL_DIR = Path(__file__).parent
@@ -33,7 +33,17 @@ def artifact_passes(case: dict, artifact: object, expected: dict) -> bool:
     if not isinstance(evidence, list) or not all(isinstance(path, str) for path in evidence):
         return False
     fixture = FIXTURES / case["fixture"]
-    return all(path in evidence and (fixture / path).is_file() for path in expected["evidence"])
+    if len(evidence) != len(expected["evidence"]) or set(evidence) != set(expected["evidence"]):
+        return False
+    fixture_root = fixture.resolve()
+    for citation in evidence:
+        normalized = PurePosixPath(citation)
+        if citation != normalized.as_posix() or normalized.is_absolute() or ".." in normalized.parts or "\\" in citation:
+            return False
+        cited_file = fixture / normalized
+        if cited_file.is_symlink() or not cited_file.is_file() or not cited_file.resolve().is_relative_to(fixture_root):
+            return False
+    return True
 
 
 def safety_passes(artifact: object) -> bool:

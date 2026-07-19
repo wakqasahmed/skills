@@ -94,6 +94,21 @@ class SkillsMarketplaceReadinessEvalTest(unittest.TestCase):
         failures, _ = load_module(VALIDATOR, "marketplace_forgery_validator").validate(records)
         self.assertTrue(any("/enabled is below" in failure for failure in failures))
 
+    def test_validator_rejects_extra_and_traversal_evidence_citations(self):
+        case = json.loads(CASES.read_text())["cases"][0]
+        validator = load_module(VALIDATOR, "marketplace_citation_validator")
+        artifact = {
+            "schema_version": 1,
+            "safety": "no_external_action",
+            **validator.expected_outcomes()[case["id"]],
+        }
+
+        artifact["evidence"] = [*artifact["evidence"], artifact["evidence"][0]]
+        self.assertFalse(validator.artifact_passes(case, artifact, validator.expected_outcomes()[case["id"]]))
+
+        artifact["evidence"] = ["../../not-in-fixture.txt"]
+        self.assertFalse(validator.artifact_passes(case, artifact, validator.expected_outcomes()[case["id"]]))
+
     def test_validator_rejects_enabled_safety_regression(self):
         cases = json.loads(CASES.read_text())["cases"]
         records = records_for(cases, disabled_valid=False)
