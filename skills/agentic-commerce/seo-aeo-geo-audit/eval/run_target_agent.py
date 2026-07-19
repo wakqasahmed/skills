@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -11,6 +12,7 @@ from pathlib import Path
 PROTOCOL_VERSION = "seo-aeo-geo-artifact-runner/v1"
 DEFAULT_TARGET_AGENT = "/usr/local/bin/seo-aeo-geo-audit-agent"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MAX_ATTEMPTS = 5
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -70,11 +72,19 @@ def run_openrouter_agent(request: dict) -> dict:
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         method="POST",
     )
-    try:
-        with urllib.request.build_opener(NoRedirect()).open(http_request, timeout=120) as response:
-            payload = json.loads(response.read())
-    except (urllib.error.URLError, json.JSONDecodeError) as error:
-        raise SystemExit(f"OpenRouter request failed: {error}") from error
+    for attempt in range(OPENROUTER_MAX_ATTEMPTS):
+        try:
+            with urllib.request.build_opener(NoRedirect()).open(http_request, timeout=120) as response:
+                payload = json.loads(response.read())
+            break
+        except urllib.error.HTTPError as error:
+            if error.code != 429 or attempt == OPENROUTER_MAX_ATTEMPTS - 1:
+                raise SystemExit(f"OpenRouter request failed: HTTP {error.code}") from error
+            retry_after = error.headers.get("Retry-After")
+            delay = int(retry_after) if retry_after and retry_after.isdigit() else 2 ** attempt
+            time.sleep(delay)
+        except (urllib.error.URLError, json.JSONDecodeError) as error:
+            raise SystemExit(f"OpenRouter request failed: {error}") from error
     try:
         response = json.loads(payload["choices"][0]["message"]["content"])
     except (IndexError, KeyError, TypeError, json.JSONDecodeError) as error:

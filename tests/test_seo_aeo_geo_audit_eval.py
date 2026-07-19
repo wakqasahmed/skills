@@ -177,6 +177,38 @@ class SeoAeoGeoAuditEvalTest(unittest.TestCase):
         self.assertEqual(opener.timeout, 120)
         self.assertEqual(response, {"model": "declared-model", "model_version": "approved-version", "skill_used": False, "audit_artifact": {"disposition": "route"}})
 
+    def test_openrouter_runner_retries_rate_limits_using_retry_after(self):
+        target_agent = load_module(TARGET_AGENT, "seo_openrouter_rate_limit")
+        request = {"model": "declared-model", "prompt": "Audit this.", "input": {"observations": []}}
+        provider_response = {"choices": [{"message": {"content": json.dumps({"skill_used": True, "audit_artifact": {"disposition": "audit"}})}}]}
+
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return json.dumps(provider_response).encode()
+
+        class Opener:
+            def __init__(self):
+                self.calls = 0
+
+            def open(self, http_request, timeout):
+                self.calls += 1
+                if self.calls == 1:
+                    raise target_agent.urllib.error.HTTPError(http_request.full_url, 429, "rate limited", {"Retry-After": "3"}, None)
+                return Response()
+
+        opener = Opener()
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key", "HARNESS_MODEL_VERSION": "approved-version"}, clear=False), patch.object(target_agent.urllib.request, "build_opener", return_value=opener), patch.object(target_agent.time, "sleep") as sleep:
+            response = target_agent.run_openrouter_agent(request)
+        self.assertEqual(opener.calls, 2)
+        sleep.assert_called_once_with(3)
+        self.assertTrue(response["skill_used"])
+
     def test_isolated_harness_keeps_case_labels_and_condition_outside_target_workspace(self):
         harness = load_module(HARNESS, "seo_isolation_harness")
         case = json.loads(CASES.read_text())["cases"][0]

@@ -40,6 +40,9 @@ In Actions, dispatch `SEO AEO GEO audit harness`, set `run_harness` to true,
 select `openrouter`, and use the protected `main` branch. The secret-backed
 step is skipped for every other ref. It runs five enabled and five disabled trials per
 held-out case, validates the artifact outcomes, and uploads the JSON results.
+The runner retries HTTP 429 responses up to five times and honors a provider
+`Retry-After` delay when supplied; free-model capacity can still make a run
+take longer or fail after those bounded retries.
 For a local run, export `OPENROUTER_API_KEY` only in the invoking shell and run:
 
 ```bash
