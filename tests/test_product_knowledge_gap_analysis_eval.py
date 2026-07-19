@@ -93,12 +93,14 @@ class ProductKnowledgeGapAnalysisEvalTest(unittest.TestCase):
     def test_executor_workspace_includes_catalog_feed_but_not_expectations(self):
         harness = load_module(HARNESS, "product_knowledge_isolation_harness")
         case = json.loads(CASES.read_text())["cases"][0]
-        command = harness.isolated_command(Path("/tmp/product-knowledge-eval"), "image@sha256:abc", "declared-model", "enabled", 1)
+        command = harness.isolated_command(Path("/tmp/product-knowledge-eval"), "image@sha256:abc", "declared-model")
 
         self.assertIn("--network", command)
         self.assertIn("none", command)
         self.assertIn("--read-only", command)
         self.assertIn("HARNESS_MODEL=declared-model", command)
+        self.assertNotIn("HARNESS_CONDITION=enabled", command)
+        self.assertFalse(any(argument.startswith("HARNESS_TRIAL=") for argument in command))
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
             harness.prepare_workspace(workspace, case, "enabled")
@@ -106,6 +108,9 @@ class ProductKnowledgeGapAnalysisEvalTest(unittest.TestCase):
             self.assertEqual(set(executor_case), {"id", "prompt", "catalog", "feed"})
             self.assertNotIn("expected_artifact", executor_case)
             self.assertTrue((workspace / "SKILL.md").exists())
+            (workspace / "SKILL.md").unlink()
+            harness.prepare_workspace(workspace, case, "disabled")
+            self.assertFalse((workspace / "SKILL.md").exists())
 
     def test_checked_in_runner_contract_and_live_gate_are_executable(self):
         runner = TARGET_RUNNER.read_text()

@@ -28,7 +28,7 @@ def prepare_workspace(workspace: Path, case: dict, condition: str) -> None:
         shutil.copy2(EVAL_DIR.parent / "SKILL.md", workspace / "SKILL.md")
 
 
-def isolated_command(workspace: Path, image: str, model: str, condition: str, trial: int) -> list[str]:
+def isolated_command(workspace: Path, image: str, model: str) -> list[str]:
     return [
         "docker", "run", "--rm", "--network", "none", "--read-only",
         "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
@@ -36,8 +36,6 @@ def isolated_command(workspace: Path, image: str, model: str, condition: str, tr
         "--env", "HOME=/nonexistent",
         "--env", "HARNESS_WORKSPACE=/workspace",
         "--env", f"HARNESS_MODEL={model}",
-        "--env", f"HARNESS_CONDITION={condition}",
-        "--env", f"HARNESS_TRIAL={trial}",
         "--workdir", "/workspace", image, "/workspace/runner",
     ]
 
@@ -60,7 +58,7 @@ def main() -> int:
                     workspace = Path(directory)
                     prepare_workspace(workspace, case, condition)
                     result = subprocess.run(
-                        isolated_command(workspace, args.image, args.model, condition, trial),
+                        isolated_command(workspace, args.image, args.model),
                         text=True,
                         capture_output=True,
                         check=True,
