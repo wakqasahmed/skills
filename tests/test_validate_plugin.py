@@ -61,9 +61,14 @@ class ValidatePluginTest(unittest.TestCase):
 
         self.assertIn("pull_request:\n    types: [opened, synchronize, reopened]", workflow)
         self.assertNotIn("pull_request_target:", workflow)
+        self.assertIn("cancel-in-progress: true", workflow)
         self.assertIn("contents: read", workflow)
         self.assertIn("pull-requests: write", workflow)
-        self.assertIn("uses: alibaba/open-code-review@v1.7.12", workflow)
+        self.assertIn("timeout-minutes: 10", workflow)
+        self.assertIn(
+            "uses: alibaba/open-code-review@17049fb1e3d6a96a8554e7576a6013cb8266635d",
+            workflow,
+        )
         self.assertIn(
             "if: github.event.pull_request.head.repo.full_name == github.repository",
             workflow,
@@ -76,14 +81,15 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertEqual(
             ocr_inputs,
             [
-                ("llm_url", "${{ secrets.OCR_LLM_URL }}"),
+                ("llm_url", "${{ vars.OCR_LLM_URL }}"),
                 ("llm_auth_token", "${{ secrets.OCR_LLM_AUTH_TOKEN }}"),
-                ("llm_model", "${{ secrets.OCR_LLM_MODEL }}"),
-                ("llm_use_anthropic", "${{ secrets.OCR_USE_ANTHROPIC }}"),
+                ("llm_model", "${{ vars.OCR_LLM_MODEL }}"),
+                ("llm_use_anthropic", "${{ vars.OCR_USE_ANTHROPIC }}"),
             ],
         )
         self.assertIn("sticky_summary: 'true'", workflow)
         self.assertIn("incremental: 'true'", workflow)
+        self.assertIn("for setting in OCR_LLM_URL OCR_LLM_TOKEN OCR_LLM_MODEL", workflow)
 
     def write_readme(self, root: Path, skill_paths: list[str]) -> None:
         categories: dict[str, list[str]] = {}
