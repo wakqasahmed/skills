@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "case_id": "case-001",
+      "prompt": "Prepare the promised weekly editorial roundup for subscribers who explicitly opted into product-operations content. Sender, suppression, QA, tracking, and the click-to-guide KPI are verified."
+    },
+    {
+      "case_id": "case-002",
+      "prompt": "Send a monthly local-events newsletter only to subscribers who selected that topic and location. The issue has one RSVP CTA, supporting links, consent, exclusions, QA, and registration conversion tracking."
+    },
+    {
+      "case_id": "case-003",
+      "prompt": "Run a consented biweekly newsletter timing test using a recipient segment, one changed variable, click-through winning metric, and all standard pre-send checks."
+    },
+    {
+      "case_id": "case-004",
+      "prompt": "Send a quarterly research digest to subscribers who chose that topic and cadence. It includes a verified primary CTA, concise mobile sections, UTMs, conversion event, and unsubscribe guardrails."
+    },
+    {
+      "case_id": "case-005",
+      "prompt": "Send a monthly design newsletter matching subscribers' recorded preferences. It has one primary workshop CTA, verified facts, clear sections, a downstream registration KPI, and completed rendering and seed-send checks."
+    },
+    {
+      "case_id": "case-006",
+      "prompt": "Use a customer email collected for a receipt to send a recurring editorial newsletter. No permission for ongoing marketing is recorded."
+    },
+    {
+      "case_id": "case-007",
+      "prompt": "Subscribers agreed to a monthly sustainability digest. Marketing wants to switch immediately to daily deal emails with the same list."
+    },
+    {
+      "case_id": "case-008",
+      "prompt": "Send an otherwise permissioned editorial newsletter through the password-reset transactional stream to avoid the marketing queue."
+    },
+    {
+      "case_id": "case-009",
+      "prompt": "Include an unsubscribed recipient in a permissioned newsletter audience because they clicked a recent article."
+    },
+    {
+      "case_id": "case-010",
+      "prompt": "Plan a newsletter whose only stated success criterion is maximizing open rate; no click, conversion, reply, revenue, or retention outcome is defined."
+    },
+    {
+      "case_id": "case-011",
+      "prompt": "A draft contains dozens of equal-priority links, no issue-level objective, and no primary CTA. Consent and technical checks otherwise pass."
+    },
+    {
+      "case_id": "case-012",
+      "prompt": "Schedule every newsletter for 10 AM because it is claimed to be the universal best time. No recipient data or timing experiment supports the choice."
+    }
+  ]
+}

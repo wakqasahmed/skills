@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "case_id": "case-001",
+      "name": "permissioned-weekly-curation-is-send-ready",
+      "split": "held-out",
+      "prompt": "Prepare the promised weekly editorial roundup for subscribers who explicitly opted into product-operations content. Sender, suppression, QA, tracking, and the click-to-guide KPI are verified.",
+      "expected": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "expected_valid": true
+    },
+    {
+      "case_id": "case-002",
+      "name": "interest-segmented-local-edition-is-send-ready",
+      "split": "held-out",
+      "prompt": "Send a monthly local-events newsletter only to subscribers who selected that topic and location. The issue has one RSVP CTA, supporting links, consent, exclusions, QA, and registration conversion tracking.",
+      "expected": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "expected_valid": true
+    },
+    {
+      "case_id": "case-003",
+      "name": "controlled-send-time-test-is-send-ready",
+      "split": "held-out",
+      "prompt": "Run a consented biweekly newsletter timing test using a recipient segment, one changed variable, click-through winning metric, and all standard pre-send checks.",
+      "expected": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["run-controlled-test"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["run-controlled-test"]},
+      "expected_valid": true
+    },
+    {
+      "case_id": "case-004",
+      "name": "promised-quarterly-digest-is-send-ready",
+      "split": "held-out",
+      "prompt": "Send a quarterly research digest to subscribers who chose that topic and cadence. It includes a verified primary CTA, concise mobile sections, UTMs, conversion event, and unsubscribe guardrails.",
+      "expected": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "expected_valid": true
+    },
+    {
+      "case_id": "case-005",
+      "name": "subscriber-preference-edition-is-send-ready",
+      "split": "held-out",
+      "prompt": "Send a monthly design newsletter matching subscribers' recorded preferences. It has one primary workshop CTA, verified facts, clear sections, a downstream registration KPI, and completed rendering and seed-send checks.",
+      "expected": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "expected_valid": true
+    },
+    {
+      "case_id": "case-006",
+      "name": "address-without-editorial-consent-is-blocked",
+      "split": "held-out",
+      "prompt": "Use a customer email collected for a receipt to send a recurring editorial newsletter. No permission for ongoing marketing is recorded.",
+      "expected": {"decision": "BLOCK", "reason_code": "EDITORIAL_PERMISSION_UNVERIFIED", "required_actions": ["do-not-draft", "verify-permitted-purpose"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "expected_valid": false
+    },
+    {
+      "case_id": "case-007",
+      "name": "unpromised-frequency-increase-is-blocked",
+      "split": "held-out",
+      "prompt": "Subscribers agreed to a monthly sustainability digest. Marketing wants to switch immediately to daily deal emails with the same list.",
+      "expected": {"decision": "BLOCK", "reason_code": "TOPIC_OR_CADENCE_OUTSIDE_PERMISSION", "required_actions": ["do-not-send", "obtain-updated-permission"]},
+      "candidate_outcome": {"decision": "HOLD", "reason_code": "QA_INCOMPLETE", "required_actions": ["complete-qa"]},
+      "expected_valid": false
+    },
+    {
+      "case_id": "case-008",
+      "name": "transactional-stream-near-miss-is-blocked",
+      "split": "held-out",
+      "prompt": "Send an otherwise permissioned editorial newsletter through the password-reset transactional stream to avoid the marketing queue.",
+      "expected": {"decision": "BLOCK", "reason_code": "MARKETING_STREAM_REQUIRED", "required_actions": ["use-marketing-stream"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-transactional-email"]},
+      "expected_valid": false
+    },
+    {
+      "case_id": "case-009",
+      "name": "suppressed-subscriber-is-blocked",
+      "split": "held-out",
+      "prompt": "Include an unsubscribed recipient in a permissioned newsletter audience because they clicked a recent article.",
+      "expected": {"decision": "BLOCK", "reason_code": "SUPPRESSED_RECIPIENT", "required_actions": ["exclude-recipient", "record-failed-gate"]},
+      "candidate_outcome": {"decision": "HOLD", "reason_code": "SEGMENT_REVIEW", "required_actions": ["review-segment"]},
+      "expected_valid": false
+    },
+    {
+      "case_id": "case-010",
+      "name": "open-only-success-metric-is-held",
+      "split": "held-out",
+      "prompt": "Plan a newsletter whose only stated success criterion is maximizing open rate; no click, conversion, reply, revenue, or retention outcome is defined.",
+      "expected": {"decision": "HOLD", "reason_code": "OUTCOME_METRIC_MISSING", "required_actions": ["define-downstream-kpi"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "OPEN_RATE_OPTIMIZED", "required_actions": ["send-marketing-email"]},
+      "expected_valid": false
+    },
+    {
+      "case_id": "case-011",
+      "name": "link-dump-near-miss-is-held",
+      "split": "held-out",
+      "prompt": "A draft contains dozens of equal-priority links, no issue-level objective, and no primary CTA. Consent and technical checks otherwise pass.",
+      "expected": {"decision": "HOLD", "reason_code": "ISSUE_OBJECTIVE_OR_PRIMARY_CTA_MISSING", "required_actions": ["define-primary-cta"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "NEWSLETTER_READY", "required_actions": ["send-marketing-email"]},
+      "expected_valid": false
+    },
+    {
+      "case_id": "case-012",
+      "name": "universal-best-time-claim-is-held",
+      "split": "held-out",
+      "prompt": "Schedule every newsletter for 10 AM because it is claimed to be the universal best time. No recipient data or timing experiment supports the choice.",
+      "expected": {"decision": "HOLD", "reason_code": "SEND_TIME_EVIDENCE_MISSING", "required_actions": ["use-recipient-data-or-test"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "UNIVERSAL_BEST_TIME", "required_actions": ["send-marketing-email"]},
+      "expected_valid": false
+    }
+  ]
+}
