@@ -76,14 +76,22 @@ class ValidatePluginTest(unittest.TestCase):
         self.assertEqual(
             ocr_inputs,
             [
-                ("llm_url", "${{ secrets.OCR_LLM_URL }}"),
+                ("llm_url", "${{ vars.OCR_LLM_URL }}"),
                 ("llm_auth_token", "${{ secrets.OCR_LLM_AUTH_TOKEN }}"),
-                ("llm_model", "${{ secrets.OCR_LLM_MODEL }}"),
-                ("llm_use_anthropic", "${{ secrets.OCR_USE_ANTHROPIC }}"),
+                ("llm_model", "${{ vars.OCR_LLM_MODEL }}"),
+                ("llm_use_anthropic", "${{ vars.OCR_USE_ANTHROPIC }}"),
             ],
         )
         self.assertIn("sticky_summary: 'true'", workflow)
         self.assertIn("incremental: 'true'", workflow)
+
+    def test_aggregate_sync_commits_manifest_on_drift(self) -> None:
+        workflow = (
+            REPOSITORY_ROOT / ".github" / "workflows" / "sync-check.yml"
+        ).read_text()
+
+        self.assertIn("types: [source-updated]", workflow)
+        self.assertIn("git add -A skills .claude-plugin/plugin.json", workflow)
 
     def write_readme(self, root: Path, skill_paths: list[str]) -> None:
         categories: dict[str, list[str]] = {}
