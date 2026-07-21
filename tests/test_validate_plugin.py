@@ -9,6 +9,8 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = REPOSITORY_ROOT / "scripts" / "validate-plugin.py"
+SYNC_SCRIPT = REPOSITORY_ROOT / "scripts" / "sync-from-source.sh"
+MANIFEST_SYNC = REPOSITORY_ROOT / "scripts" / "sync-plugin-manifest.py"
 REPOSITORY_OWNER = "wakqasahmed/"
 TAXONOMY = {
     "Agentic Commerce": {"agentic-commerce"},
@@ -91,6 +93,7 @@ class ValidatePluginTest(unittest.TestCase):
         ).read_text()
 
         self.assertIn("types: [source-updated]", workflow)
+        self.assertIn('git status --porcelain', workflow)
         self.assertIn("git add -A skills .claude-plugin/plugin.json", workflow)
 
     def write_readme(self, root: Path, skill_paths: list[str]) -> None:
@@ -148,6 +151,28 @@ class ValidatePluginTest(unittest.TestCase):
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         return root
 
+    def make_source_repositories(self, root: Path) -> list[Path]:
+        source_roots = [
+            root / name
+            for name in ("visibility", "commerce", "workflow", "laravel", "email")
+        ]
+        source_skills = [
+            (source_roots[0], "ai-visibility", "ai-visibility-skill"),
+            (source_roots[1], "agentic-commerce", "agentic-commerce-skill"),
+            (source_roots[2], "engineering", "engineering-skill"),
+            (source_roots[2], "productivity", "productivity-skill"),
+            (source_roots[2], "product", "product-skill"),
+            (source_roots[3], "php", "php-skill"),
+            (source_roots[3], "laravel", "laravel-skill"),
+            (source_roots[3], "filament", "filament-skill"),
+            (source_roots[4], "", "email-marketing-skill"),
+        ]
+        for source_root, folder, skill in source_skills:
+            skill_directory = source_root / "skills" / folder / skill
+            skill_directory.mkdir(parents=True, exist_ok=True)
+            (skill_directory / "SKILL.md").write_text("# Example\n")
+        return source_roots
+
     def validate(self, root: Path) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             ["python3", "scripts/validate-plugin.py"],
@@ -160,6 +185,55 @@ class ValidatePluginTest(unittest.TestCase):
         result = self.validate(self.make_repository())
 
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_sync_detects_and_documents_an_added_source_skill(self) -> None:
+        root = self.make_repository()
+        shutil.copy2(SYNC_SCRIPT, root / "scripts" / "sync-from-source.sh")
+        shutil.copy2(MANIFEST_SYNC, root / "scripts" / "sync-plugin-manifest.py")
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.test",
+                "commit",
+                "-qm",
+                "initial",
+            ],
+            cwd=root,
+            check=True,
+        )
+        source_roots = self.make_source_repositories(root)
+        added_skill = source_roots[2] / "skills" / "engineering" / "new-engineering-skill"
+        added_skill.mkdir()
+        (added_skill / "SKILL.md").write_text("# New engineering skill\n")
+
+        result = subprocess.run(
+            ["bash", "scripts/sync-from-source.sh", *(str(source) for source in source_roots)],
+            cwd=root,
+            text=True,
+            capture_output=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "./skills/engineering/new-engineering-skill",
+            json.loads((root / ".claude-plugin" / "plugin.json").read_text())["skills"],
+        )
+        self.assertIn(
+            "- [New Engineering Skill](skills/engineering/new-engineering-skill/)",
+            (root / "README.md").read_text(),
+        )
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        self.assertIn("?? skills/engineering/new-engineering-skill/", status.stdout)
 
     def test_rejects_retired_repositories_outside_the_readme(self) -> None:
         root = self.make_repository()
