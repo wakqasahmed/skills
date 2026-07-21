@@ -34,11 +34,12 @@ jobs:
       - name: Fail on drift
         id: drift
         run: |
-          if git diff --quiet; then
+          if [[ -z "$(git status --porcelain)" ]]; then
             echo "drifted=false" >> "$GITHUB_OUTPUT"
           else
             echo "drifted=true" >> "$GITHUB_OUTPUT"
             git diff --stat
+            git status --short
             if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
               echo "Aggregate has drifted from source repos. Run scripts/sync-from-source.sh and commit." >&2
               exit 1
@@ -59,7 +60,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          branch="sync/from-source-$(date +%Y%m%d)"
+          branch="sync/from-source-${GITHUB_RUN_ID}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"

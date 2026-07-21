@@ -91,6 +91,8 @@ class ValidatePluginTest(unittest.TestCase):
         ).read_text()
 
         self.assertIn("types: [source-updated]", workflow)
+        self.assertIn('branch="sync/from-source-${GITHUB_RUN_ID}"', workflow)
+        self.assertIn('git status --porcelain', workflow)
         self.assertIn("git add -A skills .claude-plugin/plugin.json", workflow)
 
     def write_readme(self, root: Path, skill_paths: list[str]) -> None:
