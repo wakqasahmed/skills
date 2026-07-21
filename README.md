@@ -23,31 +23,26 @@ Example: `workflow-router Checkout now returns 500 after coupon changes.` routes
 skills.sh does not support repository-defined marketplace groups. Use this category-first catalogue to choose a relevant skill, then keep the canonical installer above for the complete set.
 
 ### Agentic Commerce
-
-- [Agent Readiness](skills/agentic-commerce/agent-readiness/)
-- [Commerce Protocol Readiness](skills/agentic-commerce/commerce-protocol-readiness/)
-- [Custom Agent Remediation Plan](skills/agentic-commerce/custom-agent-remediation-plan/)
-- [Ecommerce Policy Readiness](skills/agentic-commerce/ecommerce-policy-readiness/)
-- [FDE Opportunity Map](skills/agentic-commerce/fde-opportunity-map/)
-- [LLMs.txt and Crawler Access](skills/agentic-commerce/llms-txt-and-crawler-access/)
-- [Product Knowledge Gap Analysis](skills/agentic-commerce/product-knowledge-gap-analysis/)
 - [Readiness Audit](skills/agentic-commerce/readiness-audit/)
 - [SEO, AEO, and GEO Audit](skills/agentic-commerce/seo-aeo-geo-audit/)
+- [Agent Readiness](skills/agentic-commerce/agent-readiness/)
+- [Commerce Protocol Readiness](skills/agentic-commerce/commerce-protocol-readiness/)
+- [Product Knowledge Gap Analysis](skills/agentic-commerce/product-knowledge-gap-analysis/)
+- [LLMs.txt and Crawler Access](skills/agentic-commerce/llms-txt-and-crawler-access/)
+- [Ecommerce Policy Readiness](skills/agentic-commerce/ecommerce-policy-readiness/)
+- [Custom Agent Remediation Plan](skills/agentic-commerce/custom-agent-remediation-plan/)
+- [FDE Opportunity Map](skills/agentic-commerce/fde-opportunity-map/)
 - [Skills Marketplace Readiness](skills/agentic-commerce/skills-marketplace-readiness/)
-
 ### AI Visibility
-
-- [AI Search Remediation Plan](skills/ai-visibility/ai-search-remediation-plan/)
 - [AI Visibility Audit](skills/ai-visibility/ai-visibility-audit/)
-- [Answer Engine Content Audit](skills/ai-visibility/answer-engine-content-audit/)
-- [Citation Readiness Audit](skills/ai-visibility/citation-readiness-audit/)
 - [LLMs.txt Generator](skills/ai-visibility/llms-txt-generator/)
 - [Robots AI Crawler Audit](skills/ai-visibility/robots-ai-crawler-audit/)
 - [Schema Markup Audit](skills/ai-visibility/schema-markup-audit/)
 - [Sitemap Discovery Audit](skills/ai-visibility/sitemap-discovery-audit/)
-
+- [Answer Engine Content Audit](skills/ai-visibility/answer-engine-content-audit/)
+- [Citation Readiness Audit](skills/ai-visibility/citation-readiness-audit/)
+- [AI Search Remediation Plan](skills/ai-visibility/ai-search-remediation-plan/)
 ### Email Marketing
-
 - [Email Marketing Guardrails](skills/email-marketing/00-email-marketing-guardrails/)
 - [Newsletter Editorial](skills/email-marketing/01-newsletter-editorial/)
 - [Welcome Onboarding](skills/email-marketing/02-welcome-onboarding/)
@@ -70,37 +65,28 @@ skills.sh does not support repository-defined marketplace groups. Use this categ
 - [Lifecycle Orchestration](skills/email-marketing/19-lifecycle-orchestration/)
 - [List Growth Signup Preferences](skills/email-marketing/20-list-growth-signup-preferences/)
 - [Deliverability Sender Operations](skills/email-marketing/21-deliverability-sender-operations/)
-
 ### Engineering Workflow
-
-- [AI Agent PR Metadata](skills/engineering/ai-agent-pr-metadata/)
-- [Changesets Release](skills/engineering/changesets-release/)
 - [Clarify Work](skills/engineering/clarify-work/)
 - [Decompose to Issues](skills/engineering/decompose-to-issues/)
 - [Define Done](skills/engineering/define-done/)
-- [HITL Blocker](skills/engineering/hitl-blocker/)
-- [Release Gate](skills/engineering/release-gate/)
 - [Review Gate](skills/engineering/review-gate/)
 - [Subagent Pipeline](skills/engineering/subagent-pipeline/)
+- [HITL Blocker](skills/engineering/hitl-blocker/)
+- [Release Gate](skills/engineering/release-gate/)
+- [AI Agent PR Metadata](skills/engineering/ai-agent-pr-metadata/)
 - [To PRD](skills/engineering/to-prd/)
+- [Changesets Release](skills/engineering/changesets-release/)
 - [Workflow Router](skills/engineering/workflow-router/)
-
 ### PHP/Laravel/Filament
-
-- [PHP Principles](skills/php/php-principles/)
-
-- [Laravel Conventions](skills/laravel/laravel-conventions/)
-- [Laravel Security](skills/laravel/laravel-security/)
-- [Laravel Testing](skills/laravel/laravel-testing/)
-
 - [Filament Conventions](skills/filament/filament-conventions/)
 - [Filament Plugin First](skills/filament/filament-plugin-first/)
+- [Laravel Conventions](skills/laravel/laravel-conventions/)
+- [PHP Principles](skills/php/php-principles/)
 - [Livewire Conventions](skills/filament/livewire-conventions/)
-
+- [Laravel Security](skills/laravel/laravel-security/)
+- [Laravel Testing](skills/laravel/laravel-testing/)
 ### Productivity/Product
-
 - [Roast](skills/product/roast/)
-
 - [Handover](skills/productivity/handover/)
 
 ## Repo Layout
