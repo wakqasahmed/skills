@@ -26,7 +26,6 @@
     "./skills/engineering/subagent-pipeline",
     "./skills/engineering/hitl-blocker",
     "./skills/engineering/release-gate",
-    "./skills/engineering/workflow-router",
     "./skills/product/roast",
     "./skills/productivity/handover",
     "./skills/engineering/ai-agent-pr-metadata",
@@ -52,14 +51,15 @@
     "./skills/email-marketing/19-lifecycle-orchestration",
     "./skills/email-marketing/20-list-growth-signup-preferences",
     "./skills/email-marketing/21-deliverability-sender-operations",
-    "./skills/engineering/changesets-release",
     "./skills/engineering/to-prd",
     "./skills/filament/filament-conventions",
     "./skills/filament/filament-plugin-first",
-    "./skills/filament/livewire-conventions",
     "./skills/laravel/laravel-conventions",
+    "./skills/php/php-principles",
+    "./skills/engineering/changesets-release",
+    "./skills/engineering/workflow-router",
+    "./skills/filament/livewire-conventions",
     "./skills/laravel/laravel-security",
-    "./skills/laravel/laravel-testing",
-    "./skills/php/php-principles"
+    "./skills/laravel/laravel-testing"
   ]
 }

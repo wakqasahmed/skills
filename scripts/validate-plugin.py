@@ -133,11 +133,18 @@ def is_forbidden_list_entry(path, line):
 
 source_references = []
 stale_automation = []
+aggregate_sync_paths = {
+    Path(".github/workflows/sync-check.yml"),
+    Path("scripts/sync-from-source.sh"),
+    Path("scripts/sync-plugin-manifest.py"),
+}
 for path, content in tracked_text_files():
     for repo in former_source_repos:
-        if any(repo in line and not is_forbidden_list_entry(path, line) for line in content.splitlines()):
+        if path not in aggregate_sync_paths and any(repo in line and not is_forbidden_list_entry(path, line) for line in content.splitlines()):
             source_references.append(f"{path}: {repo}")
     if (
+        path not in aggregate_sync_paths
+        and
         "sync" in path.name.lower()
         and (path.parts[0] == "scripts" or path.parts[:2] == (".github", "workflows"))
     ):
