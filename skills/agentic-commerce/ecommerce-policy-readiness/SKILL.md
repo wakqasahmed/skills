@@ -23,6 +23,7 @@ Run the checks in `references/checks.md` and cite the observed output for each f
 
 ## Guardrails
 
+- See `../references/guardrails.md` for shared cross-skill guardrails (autonomous action safety, evidence provenance, internal runtime disclosure).
 - Ground every policy answer or draft in a verified, current policy source; never infer a return, refund, delivery, warranty, or cancellation term from a product page or common practice.
 - Return `HOLD` with the missing policy fact while it can be collected. Return `BLOCK` when a material policy, exception, or authority cannot be verified.
 - Keep refunds, cancellations, substitutions, and order changes supervised by the merchant's authorized workflow; policy readability is not authority to execute an action.

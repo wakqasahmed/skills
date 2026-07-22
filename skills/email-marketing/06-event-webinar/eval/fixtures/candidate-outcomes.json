@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "records": [
+    {"name": "complete-webinar-campaign", "outcome": {"decision": "SEND", "invite_exit": "on-registration", "calendar_options": "google-and-ics", "primary_kpi": "registration-conversion"}},
+    {"name": "physical-event-logistics", "outcome": {"decision": "SEND", "invite_exit": "on-registration", "calendar_options": "google-and-ics", "primary_kpi": "registration-conversion"}},
+    {"name": "calendar-enabled-reminders", "outcome": {"decision": "SEND", "reminder_exit": "on-cancellation-or-ineligibility", "calendar_options": "google-and-ics", "reminder_content": "join-access-troubleshooting"}},
+    {"name": "segmented-event-follow-up", "outcome": {"decision": "SEND", "follow_up_segments": "attendees-and-no-shows", "follow_up_asset": "recording-or-resources", "primary_cta_count": 1}},
+    {"name": "controlled-reminder-test", "outcome": {"decision": "SEND", "reminder_baseline": "two-weeks-one-week-one-day", "test_variables": 1, "primary_kpi": "attendance-show-rate"}},
+    {"name": "registrant-must-exit-invites", "outcome": {"decision": "HOLD", "reason_code": "INVITATION_EXIT_REQUIRED", "invite_exit": "on-registration", "required_action": "stop-invitations"}},
+    {"name": "cancelled-recipient-must-not-remind", "outcome": {"decision": "BLOCK", "reason_code": "REMINDER_INELIGIBLE", "reminder_exit": "on-cancellation-or-ineligibility", "required_action": "do-not-send-reminder"}},
+    {"name": "promotion-in-service-confirmation", "outcome": {"decision": "HOLD", "reason_code": "MARKETING_PERMISSION_MISSING", "service_confirmation": "allowed", "required_action": "separate-or-remove-promotion"}},
+    {"name": "missing-event-time-zone", "outcome": {"decision": "HOLD", "reason_code": "EVENT_LOGISTICS_MISSING", "required_action": "confirm-time-zone"}},
+    {"name": "unverified-speaker-claim", "outcome": {"decision": "HOLD", "reason_code": "FACTUAL_CLAIM_UNVERIFIED", "required_action": "verify-or-remove-claim"}}
+  ]
+}

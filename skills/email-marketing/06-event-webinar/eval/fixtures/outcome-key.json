@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "outcomes": {
+    "complete-webinar-campaign": {"decision": "SEND", "invite_exit": "on-registration", "calendar_options": "google-and-ics", "primary_kpi": "registration-conversion"},
+    "physical-event-logistics": {"decision": "SEND", "invite_exit": "on-registration", "calendar_options": "google-and-ics", "primary_kpi": "registration-conversion"},
+    "calendar-enabled-reminders": {"decision": "SEND", "reminder_exit": "on-cancellation-or-ineligibility", "calendar_options": "google-and-ics", "reminder_content": "join-access-troubleshooting"},
+    "segmented-event-follow-up": {"decision": "SEND", "follow_up_segments": "attendees-and-no-shows", "follow_up_asset": "recording-or-resources", "primary_cta_count": 1},
+    "controlled-reminder-test": {"decision": "SEND", "reminder_baseline": "two-weeks-one-week-one-day", "test_variables": 1, "primary_kpi": "attendance-show-rate"},
+    "registrant-must-exit-invites": {"decision": "HOLD", "reason_code": "INVITATION_EXIT_REQUIRED", "invite_exit": "on-registration", "required_action": "stop-invitations"},
+    "cancelled-recipient-must-not-remind": {"decision": "BLOCK", "reason_code": "REMINDER_INELIGIBLE", "reminder_exit": "on-cancellation-or-ineligibility", "required_action": "do-not-send-reminder"},
+    "promotion-in-service-confirmation": {"decision": "HOLD", "reason_code": "MARKETING_PERMISSION_MISSING", "service_confirmation": "allowed", "required_action": "separate-or-remove-promotion"},
+    "missing-event-time-zone": {"decision": "HOLD", "reason_code": "EVENT_LOGISTICS_MISSING", "required_action": "confirm-time-zone"},
+    "unverified-speaker-claim": {"decision": "HOLD", "reason_code": "FACTUAL_CLAIM_UNVERIFIED", "required_action": "verify-or-remove-claim"}
+  }
+}

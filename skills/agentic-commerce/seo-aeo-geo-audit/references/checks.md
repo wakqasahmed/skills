@@ -26,9 +26,13 @@ If a canonical page is absent from both sitemap and relevant navigational HTML, 
 ```bash
 curl -sS -L --max-time 20 "$URL" | grep -oE '<title>[^<]*|<h1[^>]*>[^<]+' | head -5
 curl -sS -L --max-time 20 "$URL" | grep -oiE '<meta[^>]+name=["'"']description["'"'][^>]*>'
-for ua in GPTBot ClaudeBot PerplexityBot Google-Extended; do
+for ua in OAI-SearchBot Claude-SearchBot PerplexityBot; do
   printf '%-16s ' "$ua"; curl -sS -L --max-time 20 -o /dev/null -w '%{http_code}\n' -A "$ua" "$URL"
 done
 ```
 
-Compare bot responses with the default response. Different blocked responses are an access finding; check all claims against visible page text.
+These are search crawler identities documented by their publishers. GPTBot and ClaudeBot control model-training crawling instead. [SRC-OPENAI-CRAWLERS] [SRC-ANTHROPIC-CRAWLERS] [SRC-PERPLEXITY-CRAWLERS]
+
+Do not send `Google-Extended` as an HTTP user-agent; it is a robots.txt control token and does not affect Google Search. [SRC-GOOGLE-EXTENDED]
+
+Compare crawler responses with the default response. Different blocked responses are an access finding; check all claims against visible page text.

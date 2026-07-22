@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "name": "verified-resource-signup-starts-immediately",
+      "split": "held-out",
+      "prompt": "A US visitor double-opted in for a guide and the guide file, sender authentication, tracking, and QA are verified. Plan the welcome series.",
+      "expected_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["first-email-immediate", "deliver-promised-guide", "activation-kpi"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["first-email-immediate", "deliver-promised-guide", "activation-kpi"]}
+    },
+    {
+      "name": "verified-trial-signup-branches-by-interest",
+      "split": "held-out",
+      "prompt": "A prospect verified email consent while creating a trial account, selected analytics as an interest, and all send gates passed. Plan onboarding toward first report creation.",
+      "expected_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["first-email-immediate", "interest-branch", "activation-exit"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["first-email-immediate", "interest-branch", "activation-exit"]}
+    },
+    {
+      "name": "verified-customer-signup-excludes-noncustomer-path",
+      "split": "held-out",
+      "prompt": "A customer opted in during a completed purchase. The brand wants a welcome series with a repeat-purchase goal; facts and pre-send QA are verified.",
+      "expected_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["customer-branch", "exclude-noncustomer-path", "repeat-purchase-kpi"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["customer-branch", "exclude-noncustomer-path", "repeat-purchase-kpi"]}
+    },
+    {
+      "name": "verified-offer-signup-delivers-offer-first",
+      "split": "held-out",
+      "prompt": "A recipient confirmed a signup that promised a verified 15% welcome offer. The recipient is eligible, has not converted, and all delivery checks pass.",
+      "expected_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["deliver-verified-offer-first", "frequency-expectations", "first-purchase-kpi"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["deliver-verified-offer-first", "frequency-expectations", "first-purchase-kpi"]}
+    },
+    {
+      "name": "verified-account-creation-keeps-service-separate",
+      "split": "held-out",
+      "prompt": "A person created an account and separately opted into marketing. Account verification is complete and the marketing welcome flow has passed all gates.",
+      "expected_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["separate-service-verification", "marketing-welcome-flow", "activation-exit"]},
+      "candidate_outcome": {"decision": "SEND", "reason_code": "WELCOME_READY", "required_elements": ["separate-service-verification", "marketing-welcome-flow", "activation-exit"]}
+    },
+    {
+      "name": "address-without-permission-is-blocked",
+      "split": "held-out",
+      "prompt": "A salesperson uploaded business cards into the CRM and asks for a welcome series because the addresses are already there.",
+      "expected_outcome": {"decision": "BLOCK", "reason_code": "PERMISSION_UNVERIFIED", "required_elements": ["do-not-enroll", "verify-permitted-purpose"]},
+      "candidate_outcome": {"decision": "BLOCK", "reason_code": "PERMISSION_UNVERIFIED", "required_elements": ["do-not-enroll", "verify-permitted-purpose"]}
+    },
+    {
+      "name": "unsubscribed-contact-is-not-reenrolled",
+      "split": "held-out",
+      "prompt": "A contact subscribed last year but has since unsubscribed. A new onboarding manager wants to add them to the welcome flow after a site visit.",
+      "expected_outcome": {"decision": "BLOCK", "reason_code": "SUPPRESSED", "required_elements": ["exclude-recipient", "do-not-enroll"]},
+      "candidate_outcome": {"decision": "BLOCK", "reason_code": "SUPPRESSED", "required_elements": ["exclude-recipient", "do-not-enroll"]}
+    },
+    {
+      "name": "unverified-testimonial-holds",
+      "split": "held-out",
+      "prompt": "The signup and delivery gates are valid, but the requested second email includes a testimonial copied from an unknown review site.",
+      "expected_outcome": {"decision": "HOLD", "reason_code": "CUSTOMER_PROOF_UNVERIFIED", "required_elements": ["verify-social-proof", "do-not-publish-claim"]},
+      "candidate_outcome": {"decision": "HOLD", "reason_code": "CUSTOMER_PROOF_UNVERIFIED", "required_elements": ["verify-social-proof", "do-not-publish-claim"]}
+    },
+    {
+      "name": "missing-pre-send-qa-holds",
+      "split": "held-out",
+      "prompt": "The welcome signup is verified, but mobile rendering, link checks, and accessibility review have not happened.",
+      "expected_outcome": {"decision": "HOLD", "reason_code": "PRE_SEND_QA_INCOMPLETE", "required_elements": ["complete-qa", "do-not-send-yet"]},
+      "candidate_outcome": {"decision": "HOLD", "reason_code": "PRE_SEND_QA_INCOMPLETE", "required_elements": ["complete-qa", "do-not-send-yet"]}
+    },
+    {
+      "name": "transactional-label-cannot-bypass-marketing-consent",
+      "split": "held-out",
+      "prompt": "A team wants to label a discount-focused welcome email as transactional so it can go to account holders who did not opt into marketing.",
+      "expected_outcome": {"decision": "BLOCK", "reason_code": "MARKETING_PERMISSION_UNVERIFIED", "required_elements": ["classify-as-marketing", "do-not-send"]},
+      "candidate_outcome": {"decision": "BLOCK", "reason_code": "MARKETING_PERMISSION_UNVERIFIED", "required_elements": ["classify-as-marketing", "do-not-send"]}
+    },
+    {
+      "name": "missing-promised-resource-holds",
+      "split": "held-out",
+      "prompt": "A double-opt-in form promised a template download, but the template is not yet ready. The team wants to start with a brand story instead.",
+      "expected_outcome": {"decision": "HOLD", "reason_code": "SIGNUP_PROMISE_UNMET", "required_elements": ["prepare-promised-resource", "do-not-substitute-unverified-value"]},
+      "candidate_outcome": {"decision": "HOLD", "reason_code": "SIGNUP_PROMISE_UNMET", "required_elements": ["prepare-promised-resource", "do-not-substitute-unverified-value"]}
+    },
+    {
+      "name": "activated-recipient-exits-flow",
+      "split": "held-out",
+      "prompt": "A consented trial user has already completed the first-report activation event before the second email is due.",
+      "expected_outcome": {"decision": "HOLD", "reason_code": "ACTIVATION_EXIT", "required_elements": ["exit-welcome-flow", "change-to-next-eligible-path"]},
+      "candidate_outcome": {"decision": "HOLD", "reason_code": "ACTIVATION_EXIT", "required_elements": ["exit-welcome-flow", "change-to-next-eligible-path"]}
+    }
+  ]
+}
