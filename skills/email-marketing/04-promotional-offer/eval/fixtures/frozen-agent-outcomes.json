@@ -1,0 +1,16 @@
+{
+  "outcomes": [
+    {"name": "verified-summer-offer-is-ready", "outcome": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}},
+    {"name": "relevant-category-offer-is-ready", "outcome": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}},
+    {"name": "loyalty-tier-offer-is-ready", "outcome": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}},
+    {"name": "seasonal-offer-with-controlled-test-is-ready", "outcome": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}},
+    {"name": "geo-targeted-promotion-is-ready", "outcome": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}},
+    {"name": "unverified-discount-is-blocked", "outcome": {"decision": "BLOCK", "reason_code": "OFFER_TERMS_UNVERIFIED", "required_actions": ["verify-offer-terms", "do-not-send"]}},
+    {"name": "non-opener-resend-is-blocked", "outcome": {"decision": "BLOCK", "reason_code": "NON_OPENER_RESEND_OR_DECEPTIVE_SCARCITY", "required_actions": ["do-not-resend", "remove-deceptive-claim"]}},
+    {"name": "address-list-without-consent-is-blocked", "outcome": {"decision": "BLOCK", "reason_code": "MARKETING_PERMISSION_UNVERIFIED", "required_actions": ["do-not-send", "verify-permission-and-suppression"]}},
+    {"name": "suppressed-recent-purchaser-is-blocked", "outcome": {"decision": "BLOCK", "reason_code": "SUPPRESSION_OR_EXCLUSION_FAILURE", "required_actions": ["exclude-recipient", "do-not-send"]}},
+    {"name": "missing-send-qa-holds", "outcome": {"decision": "HOLD", "reason_code": "PRE_SEND_QA_INCOMPLETE", "required_actions": ["complete-send-qa"]}},
+    {"name": "click-only-success-metric-holds", "outcome": {"decision": "HOLD", "reason_code": "BUSINESS_OUTCOME_MEASUREMENT_MISSING", "required_actions": ["define-conversion-or-revenue-metric"]}},
+    {"name": "missing-eligibility-terms-holds", "outcome": {"decision": "HOLD", "reason_code": "ELIGIBILITY_OR_EXCLUSIONS_UNRESOLVED", "required_actions": ["define-eligibility-and-exclusions"]}}
+  ]
+}

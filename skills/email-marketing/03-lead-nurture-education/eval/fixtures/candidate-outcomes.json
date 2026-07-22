@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "outcomes": {
+    "permissioned-guide-request": {"decision": "SEND", "actions": ["deliver-promised-asset", "segment-audience", "define-primary-kpi", "include-exit-rules"]},
+    "permissioned-webinar-follow-up": {"decision": "SEND", "actions": ["segment-audience", "route-high-intent-response", "define-primary-kpi", "include-exit-rules"]},
+    "permissioned-trial-education": {"decision": "SEND", "actions": ["segment-audience", "define-primary-kpi", "include-exit-rules", "one-primary-cta-per-email"]},
+    "permissioned-case-study-download": {"decision": "SEND", "actions": ["deliver-promised-asset", "use-verified-proof", "define-primary-kpi", "include-exit-rules"]},
+    "permissioned-product-inquiry": {"decision": "SEND", "actions": ["segment-audience", "one-primary-cta-per-email", "define-primary-kpi", "route-high-intent-response"]},
+    "download-without-marketing-consent": {"decision": "HOLD", "actions": ["verify-marketing-consent", "deliver-requested-asset-only"]},
+    "unsubscribed-lead": {"decision": "BLOCK", "actions": ["exclude-recipient", "do-not-send"]},
+    "purpose-mismatched-consent": {"decision": "BLOCK", "actions": ["do-not-send", "obtain-permitted-purpose"]},
+    "unverified-performance-proof": {"decision": "HOLD", "actions": ["verify-proof", "do-not-use-unverified-claim"]},
+    "missing-measurement": {"decision": "HOLD", "actions": ["define-primary-kpi", "define-conversion-event", "define-attribution-window"]},
+    "converted-lead": {"decision": "HOLD", "actions": ["exit-nurture", "route-to-customer-success"]},
+    "stale-personalization-field": {"decision": "HOLD", "actions": ["verify-personalization-field", "provide-safe-fallback"]}
+  }
+}

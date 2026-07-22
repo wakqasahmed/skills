@@ -1,0 +1,9 @@
+{
+  "image": "python:3.12-alpine@sha256:6d43704baacd1bfbe7c295d7f13079d5d8104ed33568873133f8fc69980419df",
+  "runner": "skills/04-promotional-offer/eval/harness_runner.py",
+  "runner_sha256": "123d7cf752c807ee8af07b5361dae70f750496fc3a8439085acabf8fa57cd588",
+  "expected_metadata": {
+    "model_version": "promotional-offer-agent-v1",
+    "harness_version": "promotional-offer-runner-v1"
+  }
+}

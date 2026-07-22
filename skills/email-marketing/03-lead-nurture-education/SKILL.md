@@ -55,3 +55,4 @@ Return all of the following:
 - Never optimize for opens alone; use clicks, conversions, revenue, retention, qualified replies, or pipeline as the primary outcome. [LIT-MPP-01][MC-CONV-01][BRAZE-METRIC-01]
 - Never claim a universal best send time; use recipient-level optimization or a controlled timing test. [MC-TIME-01][MC-AB-01]
 - Never send until authentication, suppression, tracking, rendering, links, personalization fallbacks, and accessibility checks pass. [GMAIL-01][YAHOO-01][LIT-QA-01][LIT-TEST-01]
+- Return `HOLD` when a required fact or QA check is missing, and `BLOCK` when permission or suppression prohibits the nurture. [ICO-01][HUB-CONSENT-01][LIT-QA-01]

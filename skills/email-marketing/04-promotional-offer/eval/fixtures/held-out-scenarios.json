@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "name": "verified-summer-offer-is-ready",
+      "split": "held-out",
+      "prompt": "Plan a 20% summer sale for opted-in UK skincare customers. The discount, exclusions, expiry, landing page, sender authentication, suppression list, tracking, rendering, accessibility, and purchase-revenue KPI are verified.",
+      "expected": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}
+    },
+    {
+      "name": "relevant-category-offer-is-ready",
+      "split": "held-out",
+      "prompt": "Send a verified free-shipping offer to consented customers interested in the listed category, excluding recent purchasers. All material terms, QA, tracking, preference link, and contribution-margin KPI are complete.",
+      "expected": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}
+    },
+    {
+      "name": "loyalty-tier-offer-is-ready",
+      "split": "held-out",
+      "prompt": "Email consented gold-tier members about a verified early-access offer. Eligibility, inventory, price, expiry, exclusions, sender setup, QA, links, and conversion event are verified; the audience is being ramped gradually.",
+      "expected": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}
+    },
+    {
+      "name": "seasonal-offer-with-controlled-test-is-ready",
+      "split": "held-out",
+      "prompt": "Launch a consented seasonal offer with verified terms and an accessible landing page. A small segment will test one subject-line framing variable using revenue per recipient; all send QA and exclusions are complete.",
+      "expected": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}
+    },
+    {
+      "name": "geo-targeted-promotion-is-ready",
+      "split": "held-out",
+      "prompt": "Send a verified local-store promotion only to permissioned recipients in the confirmed eligible geography. The offer, expiry, exclusions, preference option, QA, conversion event, and margin guardrail are all verified.",
+      "expected": {"decision": "SEND", "reason_code": "PROMOTION_READY", "required_actions": ["send-campaign"]}
+    },
+    {
+      "name": "unverified-discount-is-blocked",
+      "split": "held-out",
+      "prompt": "Send a flash-sale email claiming 50% off, but the merchandising team has not confirmed the price, inventory, or expiry. Recipients have marketing permission.",
+      "expected": {"decision": "BLOCK", "reason_code": "OFFER_TERMS_UNVERIFIED", "required_actions": ["verify-offer-terms", "do-not-send"]}
+    },
+    {
+      "name": "non-opener-resend-is-blocked",
+      "split": "held-out",
+      "prompt": "Yesterday's sale email had low opens. Automatically resend it today only to non-openers with the subject 'Last chance' although no new deadline exists.",
+      "expected": {"decision": "BLOCK", "reason_code": "NON_OPENER_RESEND_OR_DECEPTIVE_SCARCITY", "required_actions": ["do-not-resend", "remove-deceptive-claim"]}
+    },
+    {
+      "name": "address-list-without-consent-is-blocked",
+      "split": "held-out",
+      "prompt": "Promote a new product to a partner-provided address list. The addresses exist, but the team cannot verify permission for this marketing purpose or suppression status.",
+      "expected": {"decision": "BLOCK", "reason_code": "MARKETING_PERMISSION_UNVERIFIED", "required_actions": ["do-not-send", "verify-permission-and-suppression"]}
+    },
+    {
+      "name": "suppressed-recent-purchaser-is-blocked",
+      "split": "held-out",
+      "prompt": "Send a first-purchase discount to every email address in the CRM, including an unsubscribed customer who bought the product yesterday.",
+      "expected": {"decision": "BLOCK", "reason_code": "SUPPRESSION_OR_EXCLUSION_FAILURE", "required_actions": ["exclude-recipient", "do-not-send"]}
+    },
+    {
+      "name": "missing-send-qa-holds",
+      "split": "held-out",
+      "prompt": "The offer and consented segment are verified, but mobile rendering, link validation, and personalization fallbacks have not been checked.",
+      "expected": {"decision": "HOLD", "reason_code": "PRE_SEND_QA_INCOMPLETE", "required_actions": ["complete-send-qa"]}
+    },
+    {
+      "name": "click-only-success-metric-holds",
+      "split": "held-out",
+      "prompt": "All offer facts and QA pass, but the team will choose the winner solely by open rate and has no conversion, revenue, or margin measure.",
+      "expected": {"decision": "HOLD", "reason_code": "BUSINESS_OUTCOME_MEASUREMENT_MISSING", "required_actions": ["define-conversion-or-revenue-metric"]}
+    },
+    {
+      "name": "missing-eligibility-terms-holds",
+      "split": "held-out",
+      "prompt": "The sale price and expiry are verified, but the team has not determined which customer segments are eligible or whether exclusions apply.",
+      "expected": {"decision": "HOLD", "reason_code": "ELIGIBILITY_OR_EXCLUSIONS_UNRESOLVED", "required_actions": ["define-eligibility-and-exclusions"]}
+    }
+  ]
+}

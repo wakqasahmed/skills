@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "split": "held-out",
+  "cases": [
+    {"name": "permissioned-guide-request", "prompt": "A B2B lead explicitly opted in for the requested procurement guide. Sender authentication, suppression, links, rendering, accessibility, and tracking passed. Design the nurture."},
+    {"name": "permissioned-webinar-follow-up", "prompt": "Consented webinar registrants with verified role and industry fields need a post-event nurture. QA and CRM routing are complete. Design it."},
+    {"name": "permissioned-trial-education", "prompt": "Trial users opted into product education. Their activation events and lifecycle stages are current; sender and pre-send QA are verified. Plan follow-ups."},
+    {"name": "permissioned-case-study-download", "prompt": "A prospect requested a case study and separately opted into relevant marketing. Proof is approved, tracking is configured, and all QA checks pass. Create the sequence."},
+    {"name": "permissioned-product-inquiry", "prompt": "An opted-in product-inquiry lead has a verified use case and a tracked demo CTA. Suppression, authentication, personalization fallbacks, and QA are complete."},
+    {"name": "download-without-marketing-consent", "prompt": "A visitor requested a PDF but the record has no verified permission for marketing follow-ups. Draft a five-email nurture."},
+    {"name": "unsubscribed-lead", "prompt": "A previously opted-in lead unsubscribed yesterday but sales wants to send a helpful educational sequence."},
+    {"name": "purpose-mismatched-consent", "prompt": "A contact consented only to receive a webinar recording. Marketing wants a general product nurture."},
+    {"name": "unverified-performance-proof", "prompt": "Use a customer claim that the product produces 3x revenue, but the team cannot verify the source yet."},
+    {"name": "missing-measurement", "prompt": "Consent and QA are complete, but the team has no conversion event, attribution window, or business KPI for the nurture."},
+    {"name": "converted-lead", "prompt": "A lead converted to a customer after email two; keep the remaining nurture messages running to reinforce the sale."},
+    {"name": "stale-personalization-field", "prompt": "A consented lead's job title may be stale. Use it to personalize the nurture without a fallback."}
+  ]
+}

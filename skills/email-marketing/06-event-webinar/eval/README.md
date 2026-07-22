@@ -1,0 +1,5 @@
+# Event and webinar outcome eval
+
+`bash skills/06-event-webinar/eval/run-eval.sh` is the deterministic CI layer. It uses synthetic held-out prompts, a separately stored outcome key, and frozen candidate outcome records. The scorer validates the observable campaign result (decision, exits, logistics, segmentation, and next action); static `SKILL.md` contract checks are deliberately separate.
+
+`run_harness.py` is the credential-free, manually gated model-harness seam. It creates a new temporary workspace for every condition and trial, copies only the prompt fixture, repository-controlled runner, and, for the enabled condition, `SKILL.md`. It runs the workspace in a networkless, read-only container and records 3--6 trials for both enabled and disabled conditions. The image must be digest-pinned, all records must declare harness version `1`, enabled pass rate must be at least 80%, and enabled must outperform disabled. The report includes the image, runner digest, version, trial count, threshold, and records for comparison.
